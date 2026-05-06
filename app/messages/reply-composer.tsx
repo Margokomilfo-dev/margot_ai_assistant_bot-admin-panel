@@ -17,7 +17,7 @@ function getDraftStorageKey(clientId: string) {
   return `messages:reply-draft:${clientId}`;
 }
 
-// Нижняя форма ответа: хранит черновик, помечает unread и отправляет сообщение.
+// Нижняя форма ответа: хранит черновик, отправляет сообщение и закрывает unread после Send.
 export function ReplyComposer({
   clientId,
   unreadCount,
@@ -32,33 +32,11 @@ export function ReplyComposer({
 
     return window.localStorage.getItem(getDraftStorageKey(clientId)) ?? "";
   });
-  const [hasMarkedRead, setHasMarkedRead] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSending, startSending] = useTransition();
 
-  // Сообщения становятся прочитанными только когда менеджер реально начал отвечать.
-  function markAsReadOnReplyStart() {
-    if (!canReply || unreadCount === 0 || hasMarkedRead) {
-      return;
-    }
-
-    setHasMarkedRead(true);
-    void markClientMessagesAsRead(clientId)
-      .then(() => {
-        router.refresh();
-      })
-      .catch((error: unknown) => {
-        setHasMarkedRead(false);
-        console.error("Failed to mark messages as read.", error);
-      });
-  }
-
   // Сохраняем черновик в localStorage и восстанавливаем его при возврате к диалогу.
   function handleDraftChange(value: string) {
-    if (value.trim()) {
-      markAsReadOnReplyStart();
-    }
-
     setDraft(value);
 
     const storageKey = getDraftStorageKey(clientId);
@@ -89,6 +67,11 @@ export function ReplyComposer({
         if (!result.ok) {
           setErrorMessage(result.error);
           return;
+        }
+
+        // Все предыдущие входящие сообщения считаются прочитанными только после успешного Send.
+        if (unreadCount > 0) {
+          await markClientMessagesAsRead(clientId);
         }
 
         const storageKey = getDraftStorageKey(clientId);
