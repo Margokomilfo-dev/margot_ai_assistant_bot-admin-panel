@@ -6,6 +6,7 @@ type DisplayableClient = {
   telegram_user_id?: number;
 };
 
+// Имя клиента собирается из доступных Telegram-полей с понятным fallback.
 export function getDisplayName(person: DisplayableClient) {
   const fullName = [person.first_name, person.last_name]
     .filter(Boolean)
@@ -22,6 +23,7 @@ export function getDisplayName(person: DisplayableClient) {
   return `User ${person.user_id ?? person.telegram_user_id}`;
 }
 
+// Инициалы используются в аватарах списка клиентов и шапки диалога.
 export function getInitials(person: DisplayableClient) {
   const firstInitial = person.first_name?.trim().charAt(0);
   const lastInitial = person.last_name?.trim().charAt(0);
@@ -33,6 +35,7 @@ export function getInitials(person: DisplayableClient) {
   return getDisplayName(person).slice(0, 2).toUpperCase();
 }
 
+// Форматтеры ниже держат единый вид дат в списке клиентов и внутри чата.
 export function formatDate(value: string | null) {
   if (!value) {
     return "Unknown date";
@@ -67,6 +70,20 @@ export function formatMessageTime(value: string | null) {
   }).format(new Date(value));
 }
 
+export function formatClientLastMessage(value: string | null) {
+  if (!value) {
+    return "No messages";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+// Ключ дня нужен для группировки сообщений под одним разделителем даты.
 export function getMessageDayKey(value: string | null) {
   if (!value) {
     return "unknown";

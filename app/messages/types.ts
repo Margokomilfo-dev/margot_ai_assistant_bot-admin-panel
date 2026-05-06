@@ -1,3 +1,4 @@
+// Локальные типы страницы сообщений. Они дополняют Supabase types, пока схема БД меняется.
 export type Client = {
   id: string;
   telegram_chat_id: number;
@@ -6,6 +7,8 @@ export type Client = {
   first_name: string | null;
   last_name: string | null;
   created_at: string | null;
+  last_message_at: string | null;
+  unread_count: number;
   assignment: ClientAssignment | null;
   status: "not_resolved";
 };
@@ -20,6 +23,9 @@ export type Message = {
   last_name: string | null;
   text: string;
   created_at: string | null;
+  direction: "incoming" | "outgoing";
+  read_at: string | null;
+  read_by_manager_id: string | null;
 };
 
 export type Manager = {

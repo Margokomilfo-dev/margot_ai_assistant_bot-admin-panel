@@ -11,6 +11,7 @@ type ChatPanelProps = {
   currentManager: Manager;
 };
 
+// Правая часть страницы сообщений: шапка диалога, история и форма ответа.
 export function ChatPanel({
   selectedClient,
   messages,
@@ -31,6 +32,7 @@ export function ChatPanel({
   }
 
   const assignedManager = selectedClient.assignment?.current_manager;
+  // Отвечать может только менеджер, на которого сейчас назначен клиент.
   const canReply = assignedManager?.id === currentManager.id;
   const disabledReason = !assignedManager
     ? "Assign this client to a manager before replying."
@@ -40,20 +42,17 @@ export function ChatPanel({
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-2.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">
             {getInitials(selectedClient)}
           </span>
           <div className="min-w-0">
             <h2 className="truncate text-lg font-bold">
               {getDisplayName(selectedClient)}
             </h2>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+            <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
               <span>Chat ID {selectedClient.telegram_chat_id}</span>
-              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 ring-1 ring-amber-200">
-                Not resolved
-              </span>
               <span
                 className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ring-1 ${
                   selectedClient.assignment?.current_manager
@@ -87,6 +86,7 @@ export function ChatPanel({
       <ReplyComposer
         key={selectedClient.id}
         clientId={selectedClient.id}
+        unreadCount={selectedClient.unread_count}
         canReply={canReply}
         disabledReason={disabledReason}
       />
