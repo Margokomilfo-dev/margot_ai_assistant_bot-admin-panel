@@ -65,6 +65,7 @@ export type Database = {
           created_at: string | null
           first_name: string | null
           id: string
+          last_message_at: string | null
           last_name: string | null
           telegram_chat_id: number
           telegram_user_id: number
@@ -74,6 +75,7 @@ export type Database = {
           created_at?: string | null
           first_name?: string | null
           id?: string
+          last_message_at?: string | null
           last_name?: string | null
           telegram_chat_id: number
           telegram_user_id: number
@@ -83,10 +85,76 @@ export type Database = {
           created_at?: string | null
           first_name?: string | null
           id?: string
+          last_message_at?: string | null
           last_name?: string | null
           telegram_chat_id?: number
           telegram_user_id?: number
           username?: string | null
+        }
+        Relationships: []
+      }
+      knowledge_base: {
+        Row: {
+          category_id: string
+          content: string
+          created_at: string | null
+          embedding: string | null
+          id: string
+          is_active: boolean
+          metadata: Json
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_id: string
+          content: string
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string
+          content?: string
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          is_active?: boolean
+          metadata?: Json
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_base_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_categories: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          slug?: string
         }
         Relationships: []
       }
@@ -121,19 +189,31 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string | null
+          direction: string
           id: string
+          read_at: string | null
+          read_by_manager_id: string | null
+          sent_by_manager_id: string | null
           text: string
         }
         Insert: {
           client_id: string
           created_at?: string | null
+          direction?: string
           id?: string
+          read_at?: string | null
+          read_by_manager_id?: string | null
+          sent_by_manager_id?: string | null
           text: string
         }
         Update: {
           client_id?: string
           created_at?: string | null
+          direction?: string
           id?: string
+          read_at?: string | null
+          read_by_manager_id?: string | null
+          sent_by_manager_id?: string | null
           text?: string
         }
         Relationships: [
@@ -142,6 +222,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_read_by_manager_id_fkey"
+            columns: ["read_by_manager_id"]
+            isOneToOne: false
+            referencedRelation: "managers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sent_by_manager_id_fkey"
+            columns: ["sent_by_manager_id"]
+            isOneToOne: false
+            referencedRelation: "managers"
             referencedColumns: ["id"]
           },
         ]

@@ -1,31 +1,7 @@
 import { Header } from "../messages/header";
 import { getAuthorizedManager } from "../messages/queries";
 import { KnowledgeBaseWorkspace } from "./knowledge-base-workspace";
-
-// Временные карточки нужны только для макета до подключения таблицы базы знаний.
-const draftArticles = [
-  {
-    id: "kb-1",
-    question: "Как записаться на консультацию?",
-    answer:
-      "Менеджер уточняет дату, время и контакт клиента, затем подтверждает запись в рабочем календаре.",
-    tag: "Продажи",
-  },
-  {
-    id: "kb-2",
-    question: "Что делать, если клиент не получил ссылку?",
-    answer:
-      "Проверить корректность контакта, повторно отправить ссылку и зафиксировать действие в переписке.",
-    tag: "Поддержка",
-  },
-  {
-    id: "kb-3",
-    question: "Как передать сложный вопрос другому менеджеру?",
-    answer:
-      "Снять назначение с клиента или назначить диалог на менеджера, который отвечает за нужное направление.",
-    tag: "Процессы",
-  },
-];
+import { getKnowledgeArticles, getKnowledgeCategories } from "./queries";
 
 // Чеклист показывает, какие требования будут важны для будущих AI-ответов.
 const qualityChecks = [
@@ -35,9 +11,15 @@ const qualityChecks = [
   "Информация готова к проверке перед публикацией",
 ];
 
-// Серверная страница защищает раздел и передает статичные заготовки в client workspace.
+export const dynamic = "force-dynamic";
+
+// Серверная страница защищает раздел и передает реальные материалы базы знаний.
 export default async function KnowledgeBasePage() {
   const manager = await getAuthorizedManager();
+  const [articles, categories] = await Promise.all([
+    getKnowledgeArticles(),
+    getKnowledgeCategories(),
+  ]);
   const managerName = `${manager.name} ${manager.surname}`;
 
   return (
@@ -51,7 +33,8 @@ export default async function KnowledgeBasePage() {
         />
 
         <KnowledgeBaseWorkspace
-          articles={draftArticles}
+          articles={articles}
+          categories={categories}
           qualityChecks={qualityChecks}
         />
       </div>
