@@ -1,8 +1,8 @@
 import { AssignmentForm } from "./assignment-form";
 import { MessageList } from "./message-list";
 import { ReplyComposer } from "./reply-composer";
-import type { Client, Manager, Message } from "./types";
-import { getDisplayName, getInitials } from "./utils";
+import { getDisplayName, getInitials } from "../lib/utils";
+import type { Client, Manager, Message } from "../types";
 
 type ChatPanelProps = {
   selectedClient: Client | null;

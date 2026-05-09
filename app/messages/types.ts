@@ -46,3 +46,13 @@ export type ClientAssignment = {
   current_manager: Manager | null;
   assigned_by_manager: Manager | null;
 };
+
+export type SendManagerReplyResult =
+  | {
+      ok: true;
+      data: unknown;
+    }
+  | {
+      ok: false;
+      error: string;
+    };

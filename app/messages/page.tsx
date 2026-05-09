@@ -1,7 +1,7 @@
-import { ChatPanel } from "./chat-panel";
-import { ClientsSidebar } from "./clients-sidebar";
-import { Header } from "./header";
-import { MessagesRealtime } from "./messages-realtime";
+import { ChatPanel } from "./components/chat-panel";
+import { ClientsSidebar } from "./components/clients-sidebar";
+import { Header } from "./components/header";
+import { MessagesRealtime } from "./components/messages-realtime";
 import {
   getAuthorizedManager,
   getClients,

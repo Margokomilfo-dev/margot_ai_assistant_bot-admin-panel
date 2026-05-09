@@ -2,9 +2,9 @@
 
 import { useActionState, useRef } from "react";
 
-import { updatePasswordAction } from "./actions";
+import { updatePasswordAction } from "../actions";
 
-import type { ResetPasswordState } from "./actions";
+import type { ResetPasswordState } from "../actions";
 
 const initialState: ResetPasswordState = {
   error: null,

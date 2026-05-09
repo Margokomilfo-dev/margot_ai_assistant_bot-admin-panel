@@ -1,123 +1,17 @@
 "use server";
 
-import {
-  createSupabaseAdminClient,
-  createSupabaseServerClient,
-} from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
+import { invokeKnowledgeFunction } from "./lib/knowledge-api";
+import { getKnowledgeBaseContext } from "./lib/knowledge-context";
 import type {
   CreateKnowledgeArticleResult,
   CreateKnowledgeCategoryResult,
   DeleteKnowledgeArticleResult,
   DeleteKnowledgeCategoryResult,
-  KnowledgeActionResult,
   UpdateKnowledgeArticleResult,
   UpdateKnowledgeCategoryResult,
 } from "./types";
-
-// Общий серверный контекст для всех действий базы знаний:
-// проверяем текущего Supabase-пользователя, берем его access token для Edge Function
-// и находим manager.id, чтобы backend понимал, кто создал запись.
-async function getKnowledgeBaseContext() {
-  const supabase = await createSupabaseServerClient();
-  const [{ data: userData, error }, { data: sessionData }] = await Promise.all([
-    supabase.auth.getUser(),
-    supabase.auth.getSession(),
-  ]);
-
-  if (error || !userData.user) {
-    redirect("/login");
-  }
-
-  if (!sessionData.session?.access_token) {
-    throw new Error("Missing authenticated Supabase session.");
-  }
-
-  const admin = createSupabaseAdminClient();
-  const { data: manager, error: managerError } = await admin
-    .from("managers")
-    .select("id")
-    .eq("user_id", userData.user.id)
-    .single();
-
-  if (managerError) {
-    throw new Error(managerError.message);
-  }
-
-  return {
-    accessToken: sessionData.session.access_token,
-    managerId: manager.id,
-  };
-}
-
-function getSupabaseFunctionConfig() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabasePublishableKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-  if (!supabaseUrl || !supabasePublishableKey) {
-    return {
-      ok: false,
-      error: "Missing Supabase URL or publishable key.",
-    } as const;
-  }
-
-  return {
-    ok: true,
-    supabasePublishableKey,
-    supabaseUrl,
-  } as const;
-}
-
-// Единый helper для вызова Supabase Edge Functions.
-// Все CRUD endpoints защищены JWT, поэтому каждый запрос передает access token менеджера.
-async function invokeKnowledgeFunction(input: {
-  accessToken: string;
-  endpoint: "knowledge-base" | "knowledge-categories";
-  method: "POST" | "PATCH" | "DELETE";
-  payload: Record<string, unknown>;
-}) {
-  const config = getSupabaseFunctionConfig();
-
-  if (!config.ok) {
-    return {
-      ok: false,
-      error: config.error,
-    } satisfies KnowledgeActionResult;
-  }
-
-  const response = await fetch(
-    `${config.supabaseUrl}/functions/v1/${input.endpoint}`,
-    {
-      method: input.method,
-      headers: {
-        // apikey нужен Supabase Functions для идентификации проекта,
-        // Authorization передает сессию текущего менеджера в backend.
-        apikey: config.supabasePublishableKey,
-        Authorization: `Bearer ${input.accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(input.payload),
-    },
-  );
-
-  const responseText = await response.text();
-
-  if (!response.ok) {
-    return {
-      ok: false,
-      error: responseText
-        ? `Edge Function returned ${response.status}: ${responseText}`
-        : `Edge Function returned ${response.status}`,
-    } satisfies KnowledgeActionResult;
-  }
-
-  return {
-    ok: true,
-  } satisfies KnowledgeActionResult;
-}
 
 // Server Action вызывается из клиентской формы карточки.
 // Здесь держим быструю проверку обязательных полей, чтобы не отправлять заведомо пустой запрос.

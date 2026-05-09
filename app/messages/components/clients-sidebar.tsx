@@ -1,7 +1,11 @@
 import Link from "next/link";
 
-import type { Client } from "./types";
-import { formatClientLastMessage, getDisplayName, getInitials } from "./utils";
+import {
+  formatClientLastMessage,
+  getDisplayName,
+  getInitials,
+} from "../lib/utils";
+import type { Client } from "../types";
 
 type ClientsSidebarProps = {
   clients: Client[];

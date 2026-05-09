@@ -2,10 +2,9 @@
 
 import { useActionState, useState } from "react";
 
-import { loginAction } from "./actions";
 import { PasswordRecoveryForm } from "./password-recovery-form";
-
-import type { LoginFormState } from "./types";
+import { loginAction } from "../actions";
+import type { LoginFormState } from "../types";
 
 const initialState: LoginFormState = {
   error: null,

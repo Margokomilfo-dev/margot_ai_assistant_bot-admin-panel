@@ -8,6 +8,8 @@ export type PasswordRecoveryState = {
   message: string | null;
 };
 
+// Server Action отправляет письмо восстановления через Supabase Auth.
+// redirectTo указывает на страницу, где пользователь задаст новый пароль.
 export async function sendPasswordRecoveryEmail(
   _state: PasswordRecoveryState,
   formData: FormData,
@@ -32,6 +34,7 @@ export async function sendPasswordRecoveryEmail(
   }
 
   const supabase = createSupabaseAdminClient();
+  // Admin client используется только на сервере: браузер не получает секретный ключ.
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${origin}/reset-password`,
   });

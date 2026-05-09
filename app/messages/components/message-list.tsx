@@ -2,12 +2,12 @@
 
 import { useEffect, useRef } from "react";
 
-import type { Message } from "./types";
 import {
   formatMessageDay,
   formatMessageTime,
   getMessageDayKey,
-} from "./utils";
+} from "../lib/utils";
+import type { Message } from "../types";
 
 type MessageListProps = {
   messages: Message[];

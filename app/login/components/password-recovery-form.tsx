@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import {
   sendPasswordRecoveryEmail,
   type PasswordRecoveryState,
-} from "./password-recovery-actions";
+} from "../password-recovery-actions";
 
 const initialState: PasswordRecoveryState = {
   error: null,

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { logoutAction } from "./actions";
+import { logoutAction } from "../actions";
 
 type HeaderProps = {
   title?: string;

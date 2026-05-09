@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { markClientMessagesAsRead, sendManagerReplyAction } from "./actions";
+import { markClientMessagesAsRead, sendManagerReplyAction } from "../actions";
 
 type ReplyComposerProps = {
   clientId: string;

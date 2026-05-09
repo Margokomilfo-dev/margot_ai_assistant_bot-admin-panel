@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-import { LoginForm } from "./login-form";
+import { LoginForm } from "./components/login-form";
 
 export const dynamic = "force-dynamic";
 

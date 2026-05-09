@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { Database } from "./database.types";
 
+// Server client работает с auth cookies текущего запроса.
+// Его используем там, где важно знать текущего авторизованного пользователя.
 export async function createSupabaseServerClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseSecretKey = process.env.SB_SECRET;
@@ -24,8 +26,8 @@ export async function createSupabaseServerClient() {
             cookieStore.set(name, value, options);
           });
         } catch {
-          // Server Components can read cookies, but cookie writes must happen
-          // before streaming starts. Middleware should handle session refreshes.
+          // Server Components могут читать cookies, но запись должна случиться
+          // до streaming. Обновление сессии при необходимости делает middleware/backend.
         }
       },
     },
@@ -33,6 +35,8 @@ export async function createSupabaseServerClient() {
   return api;
 }
 
+// Admin client используется только на сервере для служебных запросов к таблицам.
+// В браузер SB_SECRET попадать не должен.
 export function createSupabaseAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseSecretKey = process.env.SB_SECRET;

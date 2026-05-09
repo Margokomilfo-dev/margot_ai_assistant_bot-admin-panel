@@ -1,4 +1,4 @@
-import { Header } from "../messages/header";
+import { Header } from "../messages/components/header";
 import { getAuthorizedManager } from "../messages/queries";
 import { KnowledgeBaseWorkspace } from "./knowledge-base-workspace";
 import { getKnowledgeArticles, getKnowledgeCategories } from "./queries";

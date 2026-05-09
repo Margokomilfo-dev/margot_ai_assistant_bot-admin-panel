@@ -9,6 +9,8 @@ export type ResetPasswordState = {
   error: string | null;
 };
 
+// Server Action задает новый пароль после перехода из письма восстановления.
+// Supabase может прислать либо code в query string, либо access/refresh token в hash.
 export async function updatePasswordAction(
   _state: ResetPasswordState,
   formData: FormData,
@@ -40,6 +42,7 @@ export async function updatePasswordAction(
   const supabase = await createSupabaseServerClient();
 
   if (code) {
+    // Новый PKCE-flow: меняем одноразовый code на полноценную auth-сессию.
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
@@ -48,6 +51,7 @@ export async function updatePasswordAction(
       };
     }
   } else if (accessToken && refreshToken) {
+    // Fallback для ссылок, где Supabase вернул токены в URL hash.
     const { error } = await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,
@@ -60,6 +64,7 @@ export async function updatePasswordAction(
     }
   }
 
+  // Пароль можно менять только после восстановления сессии выше.
   const { error } = await supabase.auth.updateUser({
     password,
   });

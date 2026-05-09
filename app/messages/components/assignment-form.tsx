@@ -1,5 +1,5 @@
-import { assignClientAction } from "./actions";
-import type { Client, Manager } from "./types";
+import { assignClientAction } from "../actions";
+import type { Client, Manager } from "../types";
 
 type AssignmentFormProps = {
   selectedClient: Client;
