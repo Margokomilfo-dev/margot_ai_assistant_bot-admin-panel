@@ -8,9 +8,6 @@ export function buildManagerAssignedMessage(manager: {
   return [
     "Здравствуйте! 👋",
     "",
-    `Ваш вопрос уже передан ${manager.name} ${manager.surname}, ${manager.position}.`,
-    "",
-    "Специалист внимательно изучит ваш вопрос и скоро свяжется с вами 💬",
-    "Спасибо за ваше терпение! 💫",
+    `На ваш вопрос вскоре ответит ${manager.name} ${manager.surname}.Спасибо за ваше терпение! 💫`,
   ].join("\n");
 }
