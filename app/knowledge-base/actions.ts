@@ -2,47 +2,45 @@
 
 import { revalidatePath } from "next/cache";
 
+import type {
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+} from "@/lib/supabase/database.types";
 import { invokeKnowledgeFunction } from "./lib/knowledge-api";
 import { getKnowledgeBaseContext } from "./lib/knowledge-context";
-import type {
-  CreateKnowledgeArticleResult,
-  CreateKnowledgeCategoryResult,
-  DeleteKnowledgeArticleResult,
-  DeleteKnowledgeCategoryResult,
-  UpdateKnowledgeArticleResult,
-  UpdateKnowledgeCategoryResult,
-} from "./types";
+import type { KnowledgeActionResult } from "./types";
 
 // Server Action вызывается из клиентской формы карточки.
 // Здесь держим быструю проверку обязательных полей, чтобы не отправлять заведомо пустой запрос.
 export async function createKnowledgeArticleAction(input: {
-  question: string;
-  answer: string;
-  categoryId: string;
+  title: TablesInsert<"knowledge_base">["title"];
+  content: TablesInsert<"knowledge_base">["content"];
+  category_id: TablesInsert<"knowledge_base">["category_id"];
 }) {
-  const question = input.question.trim();
-  const answer = input.answer.trim();
-  const categoryId = input.categoryId.trim();
+  const title = input.title.trim();
+  const content = input.content.trim();
+  const categoryId = input.category_id.trim();
 
-  if (!question) {
+  if (!title) {
     return {
       ok: false,
       error: "Введите вопрос клиента.",
-    } satisfies CreateKnowledgeArticleResult;
+    } satisfies KnowledgeActionResult;
   }
 
-  if (!answer) {
+  if (!content) {
     return {
       ok: false,
       error: "Введите ответ.",
-    } satisfies CreateKnowledgeArticleResult;
+    } satisfies KnowledgeActionResult;
   }
 
   if (!categoryId) {
     return {
       ok: false,
       error: "Выберите категорию.",
-    } satisfies CreateKnowledgeArticleResult;
+    } satisfies KnowledgeActionResult;
   }
 
   const { accessToken, managerId } = await getKnowledgeBaseContext();
@@ -52,12 +50,12 @@ export async function createKnowledgeArticleAction(input: {
     method: "POST",
     payload: {
       category_id: categoryId,
-      content: answer,
+      content,
       metadata: {
         created_by_manager_id: managerId,
         source: "admin-panel",
       },
-      title: question,
+      title,
     },
   });
 
@@ -73,42 +71,42 @@ export async function createKnowledgeArticleAction(input: {
 // Server Action обновляет существующую карточку.
 // PATCH /knowledge-base пересоздаст embedding на backend, если изменились title/content.
 export async function updateKnowledgeArticleAction(input: {
-  id: string;
-  question: string;
-  answer: string;
-  categoryId: string;
+  id: Tables<"knowledge_base">["id"];
+  title: NonNullable<TablesUpdate<"knowledge_base">["title"]>;
+  content: NonNullable<TablesUpdate<"knowledge_base">["content"]>;
+  category_id: NonNullable<TablesUpdate<"knowledge_base">["category_id"]>;
 }) {
   const id = input.id.trim();
-  const question = input.question.trim();
-  const answer = input.answer.trim();
-  const categoryId = input.categoryId.trim();
+  const title = input.title.trim();
+  const content = input.content.trim();
+  const categoryId = input.category_id.trim();
 
   if (!id) {
     return {
       ok: false,
       error: "Выберите карточку для редактирования.",
-    } satisfies UpdateKnowledgeArticleResult;
+    } satisfies KnowledgeActionResult;
   }
 
-  if (!question) {
+  if (!title) {
     return {
       ok: false,
       error: "Введите вопрос клиента.",
-    } satisfies UpdateKnowledgeArticleResult;
+    } satisfies KnowledgeActionResult;
   }
 
-  if (!answer) {
+  if (!content) {
     return {
       ok: false,
       error: "Введите ответ.",
-    } satisfies UpdateKnowledgeArticleResult;
+    } satisfies KnowledgeActionResult;
   }
 
   if (!categoryId) {
     return {
       ok: false,
       error: "Выберите категорию.",
-    } satisfies UpdateKnowledgeArticleResult;
+    } satisfies KnowledgeActionResult;
   }
 
   const { accessToken } = await getKnowledgeBaseContext();
@@ -118,9 +116,9 @@ export async function updateKnowledgeArticleAction(input: {
     method: "PATCH",
     payload: {
       category_id: categoryId,
-      content: answer,
+      content,
       id,
-      title: question,
+      title,
     },
   });
 
@@ -128,19 +126,21 @@ export async function updateKnowledgeArticleAction(input: {
     revalidatePath("/knowledge-base");
   }
 
-  return result satisfies UpdateKnowledgeArticleResult;
+  return result satisfies KnowledgeActionResult;
 }
 
 // Server Action делает мягкое удаление карточки через backend:
 // запись остается в базе, но получает is_active = false.
-export async function deleteKnowledgeArticleAction(input: { id: string }) {
+export async function deleteKnowledgeArticleAction(input: {
+  id: Tables<"knowledge_base">["id"];
+}) {
   const id = input.id.trim();
 
   if (!id) {
     return {
       ok: false,
       error: "Выберите карточку для удаления.",
-    } satisfies DeleteKnowledgeArticleResult;
+    } satisfies KnowledgeActionResult;
   }
 
   const { accessToken } = await getKnowledgeBaseContext();
@@ -155,19 +155,21 @@ export async function deleteKnowledgeArticleAction(input: { id: string }) {
     revalidatePath("/knowledge-base");
   }
 
-  return result satisfies DeleteKnowledgeArticleResult;
+  return result satisfies KnowledgeActionResult;
 }
 
 // Server Action вызывается из формы добавления категории.
 // Здесь только валидируем ввод и передаем name в Edge Function knowledge-categories.
-export async function createKnowledgeCategoryAction(input: { name: string }) {
+export async function createKnowledgeCategoryAction(input: {
+  name: TablesInsert<"knowledge_categories">["name"];
+}) {
   const name = input.name.trim();
 
   if (!name) {
     return {
       ok: false,
       error: "Введите название категории.",
-    } satisfies CreateKnowledgeCategoryResult;
+    } satisfies KnowledgeActionResult;
   }
 
   const { accessToken } = await getKnowledgeBaseContext();
@@ -189,8 +191,8 @@ export async function createKnowledgeCategoryAction(input: { name: string }) {
 // Server Action переименовывает категорию.
 // PATCH /knowledge-categories пересоздает slug на backend, поэтому frontend отправляет только id и name.
 export async function updateKnowledgeCategoryAction(input: {
-  id: string;
-  name: string;
+  id: Tables<"knowledge_categories">["id"];
+  name: NonNullable<TablesUpdate<"knowledge_categories">["name"]>;
 }) {
   const id = input.id.trim();
   const name = input.name.trim();
@@ -199,14 +201,14 @@ export async function updateKnowledgeCategoryAction(input: {
     return {
       ok: false,
       error: "Выберите категорию для редактирования.",
-    } satisfies UpdateKnowledgeCategoryResult;
+    } satisfies KnowledgeActionResult;
   }
 
   if (!name) {
     return {
       ok: false,
       error: "Введите название категории.",
-    } satisfies UpdateKnowledgeCategoryResult;
+    } satisfies KnowledgeActionResult;
   }
 
   const { accessToken } = await getKnowledgeBaseContext();
@@ -221,19 +223,21 @@ export async function updateKnowledgeCategoryAction(input: {
     revalidatePath("/knowledge-base");
   }
 
-  return result satisfies UpdateKnowledgeCategoryResult;
+  return result satisfies KnowledgeActionResult;
 }
 
 // Server Action мягко удаляет категорию через backend.
 // Backend оставляет строку в базе с is_active = false, чтобы не ломать старые связи knowledge_base.
-export async function deleteKnowledgeCategoryAction(input: { id: string }) {
+export async function deleteKnowledgeCategoryAction(input: {
+  id: Tables<"knowledge_categories">["id"];
+}) {
   const id = input.id.trim();
 
   if (!id) {
     return {
       ok: false,
       error: "Выберите категорию для удаления.",
-    } satisfies DeleteKnowledgeCategoryResult;
+    } satisfies KnowledgeActionResult;
   }
 
   const { accessToken } = await getKnowledgeBaseContext();
@@ -248,5 +252,5 @@ export async function deleteKnowledgeCategoryAction(input: { id: string }) {
     revalidatePath("/knowledge-base");
   }
 
-  return result satisfies DeleteKnowledgeCategoryResult;
+  return result satisfies KnowledgeActionResult;
 }

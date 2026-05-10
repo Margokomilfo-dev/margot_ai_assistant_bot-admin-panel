@@ -8,6 +8,6 @@ export function buildManagerAssignedMessage(manager: {
   return [
     "Здравствуйте! 👋",
     "",
-    `На ваш вопрос вскоре ответит ${manager.name} ${manager.surname}.Спасибо за ваше терпение! 💫`,
+    `На ваш вопрос вскоре ответит ${manager.name} ${manager.surname}. Спасибо за ваше терпение! 💫`,
   ].join("\n");
 }

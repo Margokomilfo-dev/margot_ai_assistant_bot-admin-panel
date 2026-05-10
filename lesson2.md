@@ -1,5 +1,5 @@
 # Lesson 2: Messages Architecture
-https://astro-bot-admin-panel.vercel.app
+https://margot-ai-assistant-bot-admin-panel.vercel.app/
 
 ## Current structure
 

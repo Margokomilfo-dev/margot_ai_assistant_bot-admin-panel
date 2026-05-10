@@ -12,6 +12,37 @@ type ClientsSidebarProps = {
   selectedClientId?: string;
 };
 
+function getClientMessageStatusMeta(client: Client) {
+  switch (client.last_client_message_status) {
+    case "high":
+      return {
+        label: "High",
+        title: "Last client message needs manager attention now",
+        className: "bg-rose-50 text-rose-700 ring-rose-200",
+      };
+    case "middle":
+      return {
+        label: "Middle",
+        title: "Last client message is unread",
+        className: "bg-amber-50 text-amber-800 ring-amber-200",
+      };
+    case "low":
+      return {
+        label: "Low",
+        title: "Last client message is already read",
+        className: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+      };
+    case "bot_replied":
+      return {
+        label: "Bot replied",
+        title: "Last client message was answered by the bot",
+        className: "bg-cyan-50 text-cyan-800 ring-cyan-200",
+      };
+    case "none":
+      return null;
+  }
+}
+
 // Левый список диалогов: показывает клиентов, unread и текущего назначенного менеджера.
 export function ClientsSidebar({
   clients,
@@ -41,17 +72,16 @@ export function ClientsSidebar({
         <nav className="max-h-[calc(100vh-8.5rem)] space-y-1 overflow-y-auto p-2">
           {clients.map((client) => {
             const isActive = client.id === selectedClientId;
-
-            return (
-              <Link
-                key={client.id}
-                href={`/messages?client=${client.id}`}
-                className={`flex items-center gap-2 rounded-md px-2 py-2 transition-colors ${
-                  isActive
-                    ? "bg-white text-slate-950 shadow-sm ring-1 ring-slate-200"
-                    : "text-slate-700 hover:bg-white hover:text-slate-950"
-                }`}
-              >
+            const clientMessageStatusMeta = getClientMessageStatusMeta(client);
+            const rowClassName = `rounded-md px-2 py-2 transition-colors ${
+              isActive
+                ? "bg-white text-slate-950 shadow-sm ring-1 ring-slate-200"
+                : client.needs_manager_attention
+                  ? "bg-rose-50/70 text-slate-800 ring-1 ring-rose-100 hover:bg-white hover:text-slate-950"
+                : "text-slate-700 hover:bg-white hover:text-slate-950"
+            }`;
+            const rowContent = (
+              <span className="flex items-center gap-2">
                 <span
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                     isActive
@@ -78,21 +108,41 @@ export function ClientsSidebar({
                   <span className="block truncate text-[11px] leading-4 text-slate-400">
                     Last message {formatClientLastMessage(client.last_message_at)}
                   </span>
-                  <span className="mt-1 flex flex-wrap gap-1">
-                    <span
-                      className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ring-1 ${
-                        client.assignment?.current_manager
-                          ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                          : "bg-slate-100 text-slate-500 ring-slate-200"
-                      }`}
-                    >
-                      {client.assignment?.current_manager
-                        ? client.assignment.current_manager.name
-                        : "No assign"}
-                    </span>
-                  </span>
                 </span>
-              </Link>
+              </span>
+            );
+
+            return (
+              <div key={client.id} className={rowClassName}>
+                {isActive ? (
+                  <div aria-current="page">{rowContent}</div>
+                ) : (
+                  <Link href={`/messages?client=${client.id}`}>
+                    {rowContent}
+                  </Link>
+                )}
+                <div className="ml-10 mt-1 flex min-w-0 flex-wrap items-center gap-1.5">
+                  {clientMessageStatusMeta ? (
+                    <span
+                      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ring-1 ${clientMessageStatusMeta.className}`}
+                      title={clientMessageStatusMeta.title}
+                    >
+                      {clientMessageStatusMeta.label}
+                    </span>
+                  ) : null}
+                  <span
+                    className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ring-1 ${
+                      client.assignment?.current_manager
+                        ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                        : "bg-slate-100 text-slate-500 ring-slate-200"
+                    }`}
+                  >
+                    {client.assignment?.current_manager
+                      ? client.assignment.current_manager.name
+                      : "No assign"}
+                  </span>
+                </div>
+              </div>
             );
           })}
         </nav>

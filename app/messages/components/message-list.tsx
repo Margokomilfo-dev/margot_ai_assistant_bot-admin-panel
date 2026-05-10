@@ -13,6 +13,57 @@ type MessageListProps = {
   messages: Message[];
 };
 
+function getMessageBubbleClass(message: Message) {
+  if (message.direction === "incoming") {
+    return message.requires_manager_attention
+      ? "border border-amber-200 bg-amber-50 text-slate-900"
+      : "bg-white text-slate-900";
+  }
+
+  if (message.sent_by_manager_id) {
+    return "bg-slate-950 text-white";
+  }
+
+  if (
+    message.bot_reply_status === "fallback_handoff" ||
+    message.requires_manager_attention
+  ) {
+    return "border border-amber-200 bg-amber-50 text-slate-900";
+  }
+
+  return "border border-cyan-200 bg-cyan-50 text-slate-900";
+}
+
+function getMessageSenderLabel(message: Message) {
+  if (message.direction === "incoming") {
+    return null;
+  }
+
+  if (!message.sent_by_manager_id) {
+    if (
+      message.bot_reply_status === "fallback_handoff" ||
+      message.requires_manager_attention
+    ) {
+      return {
+        text: "Bot replied",
+        className: "text-amber-700",
+      };
+    }
+
+    return {
+      text: "Bot auto-reply",
+      className: "text-cyan-700",
+    };
+  }
+
+  return {
+    text: message.sent_by_manager
+      ? `${message.sent_by_manager.name} ${message.sent_by_manager.surname}`
+      : "Manager reply",
+    className: "text-white/70",
+  };
+}
+
 // Список сообщений группирует чат по дням и держит scroll на последнем сообщении.
 export function MessageList({ messages }: MessageListProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -66,7 +117,8 @@ export function MessageList({ messages }: MessageListProps) {
 
             <div className="rounded-md bg-white px-2 py-1 shadow-sm ring-1 ring-slate-200">
               {group.messages.map((message) => {
-                const isManagerReply = message.direction === "outgoing";
+                const isOutgoingMessage = message.direction === "outgoing";
+                const senderLabel = getMessageSenderLabel(message);
                 // Подсветка нужна только для новых входящих сообщений клиента.
                 const isUnreadClientMessage =
                   message.direction === "incoming" && !message.read_at;
@@ -83,19 +135,28 @@ export function MessageList({ messages }: MessageListProps) {
                     <div className="relative py-1.5 pr-14 text-slate-900">
                       <div
                         className={`flex min-w-0 items-start gap-2 ${
-                          isManagerReply ? "justify-end" : "justify-start"
+                          isOutgoingMessage ? "justify-end" : "justify-start"
                         }`}
                       >
                         {isUnreadClientMessage ? (
                           <span className="mt-2 h-4 w-1 shrink-0 rounded-full bg-slate-950" />
                         ) : null}
                         <div
-                          className={`max-w-[86%] rounded-md px-2.5 py-1.5 ${
-                            isManagerReply
-                              ? "bg-slate-950 text-white"
-                              : "bg-white text-slate-900"
-                          }`}
+                          className={`max-w-[86%] rounded-md px-2.5 py-1.5 ${getMessageBubbleClass(message)}`}
                         >
+                          {senderLabel ? (
+                            <p
+                              className={`mb-1 text-[10px] font-bold uppercase tracking-wide ${senderLabel.className}`}
+                            >
+                              {senderLabel.text}
+                            </p>
+                          ) : null}
+                          {message.direction === "incoming" &&
+                          message.requires_manager_attention ? (
+                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                              High priority
+                            </p>
+                          ) : null}
                           <p className="whitespace-pre-wrap break-words text-left text-sm leading-5">
                             {message.text}
                           </p>

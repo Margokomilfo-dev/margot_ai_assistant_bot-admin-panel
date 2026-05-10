@@ -1,6 +1,6 @@
 "use client";
 
-import type { KnowledgeArticle } from "../types";
+import type { KnowledgeArticle } from "../knowledge-base-workspace";
 
 type KnowledgeArticleListProps = {
   articles: KnowledgeArticle[];
@@ -67,13 +67,13 @@ export function KnowledgeArticleList({
               }`}
             >
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
-                {article.tag}
+                {article.knowledge_categories?.name ?? "Без категории"}
               </span>
               <h3 className="mt-2 line-clamp-2 text-sm font-semibold leading-5 text-slate-950">
-                {article.question}
+                {article.title}
               </h3>
               <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
-                {article.answer}
+                {article.content}
               </p>
             </button>
           ))

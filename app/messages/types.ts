@@ -1,51 +1,50 @@
-// Локальные типы страницы сообщений. Они дополняют Supabase types, пока схема БД меняется.
-export type Client = {
-  id: string;
-  telegram_chat_id: number;
-  telegram_user_id: number;
-  username: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  created_at: string | null;
-  last_message_at: string | null;
-  unread_count: number;
-  assignment: ClientAssignment | null;
-  status: "not_resolved";
-};
+import type { Tables } from "@/lib/supabase/database.types";
 
-export type Message = {
-  id: string;
-  client_id: string;
+export type Manager = Tables<"managers">;
+
+export type Client = Tables<"clients"> & {
+  unread_count: number;
+  needs_manager_attention: boolean;
+  last_client_message_status: ClientMessageStatus;
+  assignment: ClientAssignment | null;
+  last_reply: ClientLastReply | null;
+  status: "not_resolved";
+}
+
+export type Message = Omit<Tables<"messages">, "direction"> & {
   chat_id: number;
   user_id: number;
   username: string | null;
   first_name: string | null;
   last_name: string | null;
-  text: string;
-  created_at: string | null;
-  direction: "incoming" | "outgoing";
-  read_at: string | null;
-  read_by_manager_id: string | null;
-};
+  direction: Tables<"messages">["direction"];
+  sent_by_manager: Manager | null;
+}
 
-export type Manager = {
-  id: string;
-  name: string;
-  surname: string;
-  position: string;
-  user_id: string;
-  created_at: string | null;
-};
-
-export type ClientAssignment = {
-  id: string;
-  client_id: string;
-  current_manager_id: string | null;
-  assigned_by_manager_id: string | null;
-  updated_at: string | null;
+export type ClientAssignment = Tables<"client_assignments"> & {
   current_manager: Manager | null;
   assigned_by_manager: Manager | null;
-};
+}
+
+export type ClientLastReply =
+  | {
+      type: "bot";
+      bot_reply_status: string | null;
+      created_at: string | null;
+      requires_manager_attention: boolean | null;
+    }
+  | {
+      type: "manager";
+      created_at: string | null;
+      manager: Manager | null;
+    };
+
+export type ClientMessageStatus =
+  | "none"
+  | "high"
+  | "middle"
+  | "low"
+  | "bot_replied";
 
 export type SendManagerReplyResult =
   | {

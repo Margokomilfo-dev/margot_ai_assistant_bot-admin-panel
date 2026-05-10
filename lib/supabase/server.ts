@@ -7,15 +7,18 @@ import type { Database } from "./database.types";
 // Его используем там, где важно знать текущего авторизованного пользователя.
 export async function createSupabaseServerClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseSecretKey = process.env.SB_SECRET;
+  const supabasePublishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  if (!supabaseUrl || !supabaseSecretKey) {
-    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or SB_SECRET");
+  if (!supabaseUrl || !supabasePublishableKey) {
+    throw new Error(
+      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    );
   }
 
   const cookieStore = await cookies();
 
-  const api = createServerClient<Database>(supabaseUrl, supabaseSecretKey, {
+  const api = createServerClient<Database>(supabaseUrl, supabasePublishableKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

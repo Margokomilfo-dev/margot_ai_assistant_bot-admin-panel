@@ -1,4 +1,4 @@
-export type KnowledgeActionResult =
+export type TelegramActionResult =
   | {
       ok: true;
     }

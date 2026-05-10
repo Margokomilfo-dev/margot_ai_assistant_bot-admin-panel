@@ -2,7 +2,7 @@
 
 import type { FormEvent } from "react";
 
-import type { KnowledgeCategory } from "../types";
+import type { KnowledgeCategory } from "../knowledge-base-workspace";
 
 type KnowledgeCategoriesPanelProps = {
   categories: KnowledgeCategory[];

@@ -4,7 +4,11 @@ import { logoutAction } from "../actions";
 
 type HeaderProps = {
   title?: string;
-  activeSection?: "messages" | "knowledge-base";
+  activeSection?:
+    | "messages"
+    | "knowledge-base"
+    | "chatbot-settings"
+    | "telegram-settings";
   managerName: string;
   managerPosition: string;
 };
@@ -16,11 +20,22 @@ const navItems = [
     label: "База знаний",
     section: "knowledge-base",
   },
+  {
+    href: "/telegram-settings",
+    label: "Telegram",
+    section: "telegram-settings",
+  },
+  {
+    href: "/chatbot-settings",
+    label: "AI настройка",
+    section: "chatbot-settings",
+  },
+
 ] as const;
 
 // Общая шапка админки: навигация между разделами и профиль текущего менеджера.
 export function Header({
-  title = "Astro-Bot",
+  title = "AI-assistant",
   activeSection = "messages",
   managerName,
   managerPosition,

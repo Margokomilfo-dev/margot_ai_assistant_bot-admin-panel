@@ -2,6 +2,7 @@ import { ChatPanel } from "./components/chat-panel";
 import { ClientsSidebar } from "./components/clients-sidebar";
 import { Header } from "./components/header";
 import { MessagesRealtime } from "./components/messages-realtime";
+import { connection } from "next/server";
 import {
   getAuthorizedManager,
   getClients,
@@ -19,6 +20,8 @@ type MessagesPageProps = {
 
 // Серверная страница собирает данные для всего интерфейса сообщений.
 export default async function MessagesPage({ searchParams }: MessagesPageProps) {
+  await connection();
+
   const manager = await getAuthorizedManager();
   const managers = await getManagers();
   const clients = await getClients(managers, manager.id);
@@ -28,7 +31,7 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
   const selectedClient =
     clients.find((client) => client.id === clientParam) ?? clients[0] ?? null;
   const messages = selectedClient
-    ? await getMessagesByClientId(selectedClient.id)
+    ? await getMessagesByClientId(selectedClient.id, managers)
     : [];
   const managerName = `${manager.name} ${manager.surname}`;
 
@@ -37,7 +40,7 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
       <div className="mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-7xl flex-col">
         <MessagesRealtime />
         <Header
-          title="Astro-Bot — Сообщения"
+          title="AI-assistant — Сообщения"
           activeSection="messages"
           managerName={managerName}
           managerPosition={manager.position}

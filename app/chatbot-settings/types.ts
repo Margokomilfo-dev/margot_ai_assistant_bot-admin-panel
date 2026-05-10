@@ -1,4 +1,4 @@
-export type KnowledgeActionResult =
+export type ChatbotActionResult =
   | {
       ok: true;
     }

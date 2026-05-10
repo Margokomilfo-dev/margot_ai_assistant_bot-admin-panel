@@ -1,17 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
-import type { KnowledgeArticle, KnowledgeCategory } from "./types";
-
-type KnowledgeArticleRow = {
-  id: string;
-  title: string;
-  content: string;
-  category_id: string;
-  knowledge_categories: {
-    name: string;
-  } | null;
-};
-
 // Загружаем категории из Supabase на сервере.
 // Они нужны для выпадающего списка при создании карточки знания.
 export async function getKnowledgeCategories() {
@@ -26,7 +14,7 @@ export async function getKnowledgeCategories() {
     throw new Error(error.message);
   }
 
-  return data satisfies KnowledgeCategory[];
+  return data;
 }
 
 // Загружаем активные карточки базы знаний вместе с названием категории.
@@ -41,20 +29,11 @@ export async function getKnowledgeArticles() {
     .eq("is_active", true)
     // Сначала выводим самые недавно обновленные или созданные карточки.
     .order("updated_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false, nullsFirst: false })
-    .returns<KnowledgeArticleRow[]>();
+    .order("created_at", { ascending: false, nullsFirst: false });
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return data.map(
-    (article): KnowledgeArticle => ({
-      id: article.id,
-      question: article.title,
-      answer: article.content,
-      categoryId: article.category_id,
-      tag: article.knowledge_categories?.name ?? "Без категории",
-    }),
-  );
+  return data;
 }

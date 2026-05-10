@@ -12,7 +12,10 @@ import {
   updateKnowledgeArticleAction,
   updateKnowledgeCategoryAction,
 } from "../actions";
-import type { KnowledgeArticle, KnowledgeCategory } from "../types";
+import type {
+  KnowledgeArticle,
+  KnowledgeCategory,
+} from "../knowledge-base-workspace";
 
 type UseKnowledgeBaseWorkspaceInput = {
   articles: KnowledgeArticle[];
@@ -30,10 +33,10 @@ export function useKnowledgeBaseWorkspace({
   );
   const selectedArticle =
     articles.find((article) => article.id === selectedArticleId) ?? null;
-  const [question, setQuestion] = useState(selectedArticle?.question ?? "");
-  const [answer, setAnswer] = useState(selectedArticle?.answer ?? "");
+  const [question, setQuestion] = useState(selectedArticle?.title ?? "");
+  const [answer, setAnswer] = useState(selectedArticle?.content ?? "");
   const [categoryId, setCategoryId] = useState(
-    selectedArticle?.categoryId ?? categories[0]?.id ?? "",
+    selectedArticle?.category_id ?? categories[0]?.id ?? "",
   );
   const [selectedCategoryEditId, setSelectedCategoryEditId] = useState<
     string | null
@@ -68,7 +71,7 @@ export function useKnowledgeBaseWorkspace({
     }
 
     return articles.filter((article) =>
-      `${article.question} ${article.answer} ${article.tag}`
+      `${article.title} ${article.content} ${article.knowledge_categories?.name ?? ""}`
         .toLowerCase()
         .includes(normalizedQuery),
     );
@@ -77,9 +80,9 @@ export function useKnowledgeBaseWorkspace({
   function showArticle(article: KnowledgeArticle) {
     // При клике по карточке переносим ее данные в форму, чтобы менеджер видел содержимое.
     setSelectedArticleId(article.id);
-    setQuestion(article.question);
-    setAnswer(article.answer);
-    setCategoryId(article.categoryId);
+    setQuestion(article.title);
+    setAnswer(article.content);
+    setCategoryId(article.category_id);
     setErrorMessage(null);
     setSuccessMessage(null);
   }
@@ -129,14 +132,14 @@ export function useKnowledgeBaseWorkspace({
         const result = selectedArticleId
           ? await updateKnowledgeArticleAction({
               id: selectedArticleId,
-              question,
-              answer,
-              categoryId: selectedCategoryId,
+              title: question,
+              content: answer,
+              category_id: selectedCategoryId,
             })
           : await createKnowledgeArticleAction({
-              question,
-              answer,
-              categoryId: selectedCategoryId,
+              title: question,
+              content: answer,
+              category_id: selectedCategoryId,
             });
 
         if (!result.ok) {

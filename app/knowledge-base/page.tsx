@@ -26,7 +26,7 @@ export default async function KnowledgeBasePage() {
     <main className="min-h-screen bg-[#eef2f5] px-3 py-3 text-slate-950 sm:px-4 lg:px-5">
       <div className="mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-7xl flex-col">
         <Header
-          title="Astro-Bot — База знаний"
+          title="AI-assistant — База знаний"
           activeSection="knowledge-base"
           managerName={managerName}
           managerPosition={manager.position}

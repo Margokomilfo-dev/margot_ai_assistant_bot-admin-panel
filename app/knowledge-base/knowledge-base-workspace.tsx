@@ -5,7 +5,14 @@ import { KnowledgeArticleList } from "./components/article-list";
 import { KnowledgeCategoriesPanel } from "./components/categories-panel";
 import { KnowledgeQualityPanel } from "./components/quality-panel";
 import { useKnowledgeBaseWorkspace } from "./hooks/use-knowledge-base-workspace";
-import type { KnowledgeArticle, KnowledgeCategory } from "./types";
+import type { getKnowledgeArticles, getKnowledgeCategories } from "./queries";
+
+export type KnowledgeArticle = Awaited<
+  ReturnType<typeof getKnowledgeArticles>
+>[number];
+export type KnowledgeCategory = Awaited<
+  ReturnType<typeof getKnowledgeCategories>
+>[number];
 
 type KnowledgeBaseWorkspaceProps = {
   articles: KnowledgeArticle[];

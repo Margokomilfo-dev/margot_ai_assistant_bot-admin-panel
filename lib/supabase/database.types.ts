@@ -14,6 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
+      chatbot_instructions: {
+        Row: {
+          created_at: string | null
+          fallback_reply: string
+          id: string
+          is_active: boolean
+          match_count: number
+          match_threshold: number
+          max_output_tokens: number
+          metadata: Json
+          model: string
+          name: string
+          system_prompt: string
+          temperature: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          fallback_reply: string
+          id?: string
+          is_active?: boolean
+          match_count?: number
+          match_threshold?: number
+          max_output_tokens?: number
+          metadata?: Json
+          model?: string
+          name: string
+          system_prompt: string
+          temperature?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          fallback_reply?: string
+          id?: string
+          is_active?: boolean
+          match_count?: number
+          match_threshold?: number
+          max_output_tokens?: number
+          metadata?: Json
+          model?: string
+          name?: string
+          system_prompt?: string
+          temperature?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      chatbot_menu_items: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          is_active: boolean
+          label: string
+          metadata: Json
+          reply_text: string | null
+          row_order: number
+          sort_order: number
+          updated_at: string | null
+        }
+        Insert: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          metadata?: Json
+          reply_text?: string | null
+          row_order?: number
+          sort_order?: number
+          updated_at?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          metadata?: Json
+          reply_text?: string | null
+          row_order?: number
+          sort_order?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       client_assignments: {
         Row: {
           assigned_by_manager_id: string | null
@@ -64,6 +151,7 @@ export type Database = {
         Row: {
           created_at: string | null
           first_name: string | null
+          has_unresolved_manager_attention: boolean
           id: string
           last_message_at: string | null
           last_name: string | null
@@ -74,6 +162,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           first_name?: string | null
+          has_unresolved_manager_attention?: boolean
           id?: string
           last_message_at?: string | null
           last_name?: string | null
@@ -84,6 +173,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           first_name?: string | null
+          has_unresolved_manager_attention?: boolean
           id?: string
           last_message_at?: string | null
           last_name?: string | null
@@ -141,18 +231,21 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          is_active: boolean
           name: string
           slug: string
         }
         Insert: {
           created_at?: string | null
           id?: string
+          is_active?: boolean
           name: string
           slug: string
         }
         Update: {
           created_at?: string | null
           id?: string
+          is_active?: boolean
           name?: string
           slug?: string
         }
@@ -187,33 +280,48 @@ export type Database = {
       }
       messages: {
         Row: {
+          bot_reply_status: string | null
           client_id: string
           created_at: string | null
-          direction: string
+          direction: "incoming" | "outgoing"
           id: string
           read_at: string | null
           read_by_manager_id: string | null
+          related_client_message_id: string | null
+          requires_manager_attention: boolean | null
           sent_by_manager_id: string | null
+          sender_type: "client" | "bot" | "manager"
+          attention_level: "low" | "middle" | "high" | null
           text: string
         }
         Insert: {
+          bot_reply_status?: string | null
           client_id: string
           created_at?: string | null
-          direction?: string
+          direction?: "incoming" | "outgoing"
           id?: string
           read_at?: string | null
           read_by_manager_id?: string | null
+          related_client_message_id?: string | null
+          requires_manager_attention?: boolean | null
           sent_by_manager_id?: string | null
+          sender_type?: "client" | "bot" | "manager"
+          attention_level?: "low" | "middle" | "high" | null
           text: string
         }
         Update: {
+          bot_reply_status?: string | null
           client_id?: string
           created_at?: string | null
-          direction?: string
+          direction?: "incoming" | "outgoing"
           id?: string
           read_at?: string | null
           read_by_manager_id?: string | null
+          related_client_message_id?: string | null
+          requires_manager_attention?: boolean | null
           sent_by_manager_id?: string | null
+          sender_type?: "client" | "bot" | "manager"
+          attention_level?: "low" | "middle" | "high" | null
           text?: string
         }
         Relationships: [
@@ -229,6 +337,13 @@ export type Database = {
             columns: ["read_by_manager_id"]
             isOneToOne: false
             referencedRelation: "managers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_related_client_message_id_fkey"
+            columns: ["related_client_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
           {
