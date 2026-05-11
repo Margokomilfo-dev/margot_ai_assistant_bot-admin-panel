@@ -8,7 +8,6 @@ export type Client = Tables<"clients"> & {
   last_client_message_status: ClientMessageStatus;
   assignment: ClientAssignment | null;
   last_reply: ClientLastReply | null;
-  status: "not_resolved";
 }
 
 export type Message = Omit<Tables<"messages">, "direction"> & {

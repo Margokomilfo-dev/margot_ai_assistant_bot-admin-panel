@@ -21,7 +21,9 @@ export async function saveTelegramMenuItemAction(
     action_type: input.action_type?.trim() || "reply",
     is_active: input.is_active ?? true,
     label,
+    metadata: input.metadata ?? {},
     reply_text: input.reply_text?.trim(),
+    row_order: input.row_order,
     sort_order: input.sort_order,
     updated_at: new Date().toISOString(),
   };

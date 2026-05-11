@@ -7,8 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -16,8 +14,12 @@ export type Database = {
     Tables: {
       chatbot_instructions: {
         Row: {
+          ai_consecutive_reply_limit: number
+          ai_intro_reply: string
+          auto_finish_after_hours: number
           created_at: string | null
           fallback_reply: string
+          handoff_reply: string
           id: string
           is_active: boolean
           match_count: number
@@ -31,8 +33,12 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          ai_consecutive_reply_limit?: number
+          ai_intro_reply?: string
+          auto_finish_after_hours?: number
           created_at?: string | null
           fallback_reply: string
+          handoff_reply?: string
           id?: string
           is_active?: boolean
           match_count?: number
@@ -46,8 +52,12 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          ai_consecutive_reply_limit?: number
+          ai_intro_reply?: string
+          auto_finish_after_hours?: number
           created_at?: string | null
           fallback_reply?: string
+          handoff_reply?: string
           id?: string
           is_active?: boolean
           match_count?: number
@@ -149,36 +159,57 @@ export type Database = {
       }
       clients: {
         Row: {
+          ai_consecutive_replies_count: number
           created_at: string | null
+          dialog_finished_at: string | null
+          dialog_started_at: string | null
+          dialog_status: "waiting" | "in_progress" | "finished"
           first_name: string | null
+          handed_off_at: string | null
           has_unresolved_manager_attention: boolean
           id: string
+          last_ai_reply_at: string | null
           last_message_at: string | null
           last_name: string | null
           telegram_chat_id: number
           telegram_user_id: number
+          urgency_level: "low" | "middle" | "high"
           username: string | null
         }
         Insert: {
+          ai_consecutive_replies_count?: number
           created_at?: string | null
+          dialog_finished_at?: string | null
+          dialog_started_at?: string | null
+          dialog_status?: "waiting" | "in_progress" | "finished"
           first_name?: string | null
+          handed_off_at?: string | null
           has_unresolved_manager_attention?: boolean
           id?: string
+          last_ai_reply_at?: string | null
           last_message_at?: string | null
           last_name?: string | null
           telegram_chat_id: number
           telegram_user_id: number
+          urgency_level?: "low" | "middle" | "high"
           username?: string | null
         }
         Update: {
+          ai_consecutive_replies_count?: number
           created_at?: string | null
+          dialog_finished_at?: string | null
+          dialog_started_at?: string | null
+          dialog_status?: "waiting" | "in_progress" | "finished"
           first_name?: string | null
+          handed_off_at?: string | null
           has_unresolved_manager_attention?: boolean
           id?: string
+          last_ai_reply_at?: string | null
           last_message_at?: string | null
           last_name?: string | null
           telegram_chat_id?: number
           telegram_user_id?: number
+          urgency_level?: "low" | "middle" | "high"
           username?: string | null
         }
         Relationships: []
@@ -280,6 +311,8 @@ export type Database = {
       }
       messages: {
         Row: {
+          ai_confidence_score: number | null
+          attention_level: "low" | "middle" | "high" | null
           bot_reply_status: string | null
           client_id: string
           created_at: string | null
@@ -291,10 +324,11 @@ export type Database = {
           requires_manager_attention: boolean | null
           sent_by_manager_id: string | null
           sender_type: "client" | "bot" | "manager"
-          attention_level: "low" | "middle" | "high" | null
           text: string
         }
         Insert: {
+          ai_confidence_score?: number | null
+          attention_level?: "low" | "middle" | "high" | null
           bot_reply_status?: string | null
           client_id: string
           created_at?: string | null
@@ -306,10 +340,11 @@ export type Database = {
           requires_manager_attention?: boolean | null
           sent_by_manager_id?: string | null
           sender_type?: "client" | "bot" | "manager"
-          attention_level?: "low" | "middle" | "high" | null
           text: string
         }
         Update: {
+          ai_confidence_score?: number | null
+          attention_level?: "low" | "middle" | "high" | null
           bot_reply_status?: string | null
           client_id?: string
           created_at?: string | null
@@ -321,7 +356,6 @@ export type Database = {
           requires_manager_attention?: boolean | null
           sent_by_manager_id?: string | null
           sender_type?: "client" | "bot" | "manager"
-          attention_level?: "low" | "middle" | "high" | null
           text?: string
         }
         Relationships: [

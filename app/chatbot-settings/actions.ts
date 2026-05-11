@@ -12,16 +12,22 @@ export async function saveChatbotInstructionAction(
   const name = input.name.trim();
   const systemPrompt = input.system_prompt.trim();
   const fallbackReply = input.fallback_reply.trim();
+  const handoffReply = input.handoff_reply?.trim() ?? "";
+  const aiIntroReply = input.ai_intro_reply?.trim() ?? "";
 
-  if (!name || !systemPrompt || !fallbackReply) {
+  if (!name || !systemPrompt || !fallbackReply || !handoffReply) {
     return {
       ok: false,
-      error: "Заполните название, system prompt и fallback reply.",
+      error: "Заполните название, system prompt, fallback reply и handoff reply.",
     };
   }
 
   const payload = {
+    ai_consecutive_reply_limit: input.ai_consecutive_reply_limit ?? 3,
+    ai_intro_reply: aiIntroReply,
+    auto_finish_after_hours: input.auto_finish_after_hours ?? 24,
     fallback_reply: fallbackReply,
+    handoff_reply: handoffReply,
     is_active: input.is_active ?? true,
     match_count: input.match_count ?? 3,
     match_threshold: input.match_threshold ?? 0.35,

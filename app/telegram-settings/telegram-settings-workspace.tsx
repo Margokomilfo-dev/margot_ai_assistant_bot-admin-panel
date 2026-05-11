@@ -16,11 +16,14 @@ type TelegramSettingsWorkspaceProps = {
 };
 
 const emptyMenuItem = {
-  action_type: "reply",
+  action_type: "text_reply",
+  created_at: null,
   id: "",
   is_active: true,
   label: "",
+  metadata: {},
   reply_text: "",
+  row_order: 1,
   sort_order: 0,
   updated_at: null,
 };
@@ -63,7 +66,9 @@ export function TelegramSettingsWorkspace({
         id: selectedId || undefined,
         is_active: draft.is_active,
         label: draft.label,
+        metadata: draft.metadata,
         reply_text: draft.reply_text,
+        row_order: draft.row_order,
         sort_order: draft.sort_order,
       });
 
@@ -191,7 +196,7 @@ export function TelegramSettingsWorkspace({
           ) : null}
 
           <div className="grid gap-3">
-            <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_120px]">
+            <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_100px_120px]">
               <label className="grid gap-1.5">
                 <span className="text-xs font-semibold text-slate-500">
                   Название кнопки
@@ -202,6 +207,22 @@ export function TelegramSettingsWorkspace({
                     setDraft((current) => ({
                       ...current,
                       label: event.target.value,
+                    }))
+                  }
+                  className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-slate-950"
+                />
+              </label>
+              <label className="grid gap-1.5">
+                <span className="text-xs font-semibold text-slate-500">
+                  Ряд
+                </span>
+                <input
+                  type="number"
+                  value={draft.row_order}
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      row_order: Number(event.target.value),
                     }))
                   }
                   className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-slate-950"
@@ -239,7 +260,8 @@ export function TelegramSettingsWorkspace({
                 }
                 className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-slate-950"
               >
-                <option value="reply">Ответить текстом</option>
+                <option value="text_reply">Ответить текстом</option>
+                <option value="send_cv">Отправить CV</option>
                 <option value="knowledge_search">Искать в базе знаний</option>
                 <option value="handoff">Передать менеджеру</option>
                 <option value="open_flow">Открыть сценарий</option>

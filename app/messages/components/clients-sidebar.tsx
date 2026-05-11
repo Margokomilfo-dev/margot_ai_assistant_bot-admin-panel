@@ -13,33 +13,56 @@ type ClientsSidebarProps = {
 };
 
 function getClientMessageStatusMeta(client: Client) {
-  switch (client.last_client_message_status) {
+  if (client.last_client_message_status === "bot_replied") {
+    return {
+      label: "Bot replied",
+      title: "The last client message was answered by the bot",
+      className: "bg-cyan-50 text-cyan-800 ring-cyan-200",
+    };
+  }
+
+  switch (client.urgency_level) {
     case "high":
       return {
         label: "High",
-        title: "Last client message needs manager attention now",
+        title: "High urgency client",
         className: "bg-rose-50 text-rose-700 ring-rose-200",
       };
     case "middle":
       return {
         label: "Middle",
-        title: "Last client message is unread",
+        title: "Middle urgency client",
         className: "bg-amber-50 text-amber-800 ring-amber-200",
       };
     case "low":
       return {
         label: "Low",
-        title: "Last client message is already read",
+        title: "Low urgency client",
         className: "bg-emerald-50 text-emerald-700 ring-emerald-200",
       };
-    case "bot_replied":
+  }
+}
+
+function getDialogStatusMeta(client: Client) {
+  switch (client.dialog_status) {
+    case "waiting":
       return {
-        label: "Bot replied",
-        title: "Last client message was answered by the bot",
-        className: "bg-cyan-50 text-cyan-800 ring-cyan-200",
+        label: "Waiting",
+        title: "AI handed the dialog to managers",
+        className: "bg-rose-50 text-rose-700 ring-rose-200",
       };
-    case "none":
-      return null;
+    case "in_progress":
+      return {
+        label: "In progress",
+        title: "AI or manager is handling the dialog",
+        className: "bg-blue-50 text-blue-700 ring-blue-200",
+      };
+    case "finished":
+      return {
+        label: "Finished",
+        title: "The question is resolved",
+        className: "bg-slate-100 text-slate-600 ring-slate-200",
+      };
   }
 }
 
@@ -73,6 +96,7 @@ export function ClientsSidebar({
           {clients.map((client) => {
             const isActive = client.id === selectedClientId;
             const clientMessageStatusMeta = getClientMessageStatusMeta(client);
+            const dialogStatusMeta = getDialogStatusMeta(client);
             const rowClassName = `rounded-md px-2 py-2 transition-colors ${
               isActive
                 ? "bg-white text-slate-950 shadow-sm ring-1 ring-slate-200"
@@ -122,6 +146,12 @@ export function ClientsSidebar({
                   </Link>
                 )}
                 <div className="ml-10 mt-1 flex min-w-0 flex-wrap items-center gap-1.5">
+                  <span
+                    className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ring-1 ${dialogStatusMeta.className}`}
+                    title={dialogStatusMeta.title}
+                  >
+                    {dialogStatusMeta.label}
+                  </span>
                   {clientMessageStatusMeta ? (
                     <span
                       className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ring-1 ${clientMessageStatusMeta.className}`}

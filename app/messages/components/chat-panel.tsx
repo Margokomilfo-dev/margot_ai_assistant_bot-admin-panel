@@ -1,4 +1,5 @@
 import { AssignmentForm } from "./assignment-form";
+import { ClientStateForm } from "./client-state-form";
 import { MessageList } from "./message-list";
 import { ReplyComposer } from "./reply-composer";
 import { getDisplayName, getInitials } from "../lib/utils";
@@ -67,7 +68,10 @@ export function ChatPanel({
             </div>
           </div>
         </div>
-        <AssignmentForm selectedClient={selectedClient} managers={managers} />
+        <div className="flex flex-wrap items-center gap-2">
+          <ClientStateForm selectedClient={selectedClient} />
+          <AssignmentForm selectedClient={selectedClient} managers={managers} />
+        </div>
       </div>
 
       {messages.length === 0 ? (

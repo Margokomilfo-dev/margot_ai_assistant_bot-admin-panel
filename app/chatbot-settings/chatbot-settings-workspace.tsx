@@ -7,6 +7,7 @@ import {
   deleteChatbotInstructionAction,
   saveChatbotInstructionAction,
 } from "./actions";
+import type { Json } from "@/lib/supabase/database.types";
 import type { getChatbotInstructions } from "./queries";
 
 type ChatbotInstruction = Awaited<
@@ -17,9 +18,15 @@ type ChatbotSettingsWorkspaceProps = {
   instructions: ChatbotInstruction[];
 };
 
+const MANAGER_INTRO_REPLY_KEY = "manager_intro_reply";
+
 const emptyInstruction = {
+  ai_consecutive_reply_limit: 3,
+  ai_intro_reply: "",
+  auto_finish_after_hours: 24,
   created_at: null,
   fallback_reply: "",
+  handoff_reply: "",
   id: "",
   is_active: true,
   match_count: 3,
@@ -32,6 +39,36 @@ const emptyInstruction = {
   temperature: 0.4,
   updated_at: null,
 };
+
+type MetadataObject = { [key: string]: Json | undefined };
+
+function getMetadataObject(
+  metadata: ChatbotInstruction["metadata"],
+): MetadataObject {
+  return metadata && typeof metadata === "object" && !Array.isArray(metadata)
+    ? metadata
+    : {};
+}
+
+function getMetadataText(
+  metadata: ChatbotInstruction["metadata"],
+  key: string,
+) {
+  const value = getMetadataObject(metadata)[key];
+
+  return typeof value === "string" ? value : "";
+}
+
+function updateMetadataText(
+  metadata: ChatbotInstruction["metadata"],
+  key: string,
+  value: string,
+) {
+  return {
+    ...getMetadataObject(metadata),
+    [key]: value,
+  };
+}
 
 export function ChatbotSettingsWorkspace({
   instructions,
@@ -68,7 +105,11 @@ export function ChatbotSettingsWorkspace({
     startTransition(async () => {
       const result = await saveChatbotInstructionAction({
         fallback_reply: draft.fallback_reply,
+        handoff_reply: draft.handoff_reply,
+        ai_intro_reply: draft.ai_intro_reply,
         id: selectedId || undefined,
+        ai_consecutive_reply_limit: draft.ai_consecutive_reply_limit,
+        auto_finish_after_hours: draft.auto_finish_after_hours,
         is_active: draft.is_active,
         match_count: draft.match_count,
         match_threshold: draft.match_threshold,
@@ -109,6 +150,17 @@ export function ChatbotSettingsWorkspace({
       createInstruction();
       router.refresh();
     });
+  }
+
+  function updateManagerIntroReply(value: string) {
+    setDraft((current) => ({
+      ...current,
+      metadata: updateMetadataText(
+        current.metadata,
+        MANAGER_INTRO_REPLY_KEY,
+        value,
+      ),
+    }));
   }
 
   return (
@@ -278,7 +330,55 @@ export function ChatbotSettingsWorkspace({
               />
             </label>
 
-            <div className="grid gap-3 md:grid-cols-4">
+            <label className="grid gap-1.5">
+              <span className="text-xs font-semibold text-slate-500">
+                Handoff reply
+              </span>
+              <textarea
+                value={draft.handoff_reply}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    handoff_reply: event.target.value,
+                  }))
+                }
+                className="min-h-24 resize-none rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-slate-950"
+              />
+            </label>
+
+            <label className="grid gap-1.5">
+              <span className="text-xs font-semibold text-slate-500">
+                AI intro after finished dialog
+              </span>
+              <textarea
+                value={draft.ai_intro_reply}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    ai_intro_reply: event.target.value,
+                  }))
+                }
+                className="min-h-20 resize-none rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-slate-950"
+              />
+            </label>
+
+            <label className="grid gap-1.5">
+              <span className="text-xs font-semibold text-slate-500">
+                Manager intro before first reply
+              </span>
+              <textarea
+                value={getMetadataText(
+                  draft.metadata,
+                  MANAGER_INTRO_REPLY_KEY,
+                )}
+                onChange={(event) =>
+                  updateManagerIntroReply(event.target.value)
+                }
+                className="min-h-20 resize-none rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-slate-950"
+              />
+            </label>
+
+            <div className="grid gap-3 md:grid-cols-6">
               <label className="grid gap-1.5">
                 <span className="text-xs font-semibold text-slate-500">
                   Threshold
@@ -340,6 +440,38 @@ export function ChatbotSettingsWorkspace({
                     setDraft((current) => ({
                       ...current,
                       temperature: Number(event.target.value),
+                    }))
+                  }
+                  className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-slate-950"
+                />
+              </label>
+              <label className="grid gap-1.5">
+                <span className="text-xs font-semibold text-slate-500">
+                  AI limit
+                </span>
+                <input
+                  type="number"
+                  value={draft.ai_consecutive_reply_limit}
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      ai_consecutive_reply_limit: Number(event.target.value),
+                    }))
+                  }
+                  className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-slate-950"
+                />
+              </label>
+              <label className="grid gap-1.5">
+                <span className="text-xs font-semibold text-slate-500">
+                  Auto finish h
+                </span>
+                <input
+                  type="number"
+                  value={draft.auto_finish_after_hours}
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      auto_finish_after_hours: Number(event.target.value),
                     }))
                   }
                   className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus:border-slate-950"

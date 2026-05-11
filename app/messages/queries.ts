@@ -261,7 +261,6 @@ export async function getClients(managers: Manager[], currentManagerId: string) 
         ),
         assignment,
         last_reply: lastReply,
-        status: "not_resolved",
       };
     })
     .sort((firstClient, secondClient) => {
@@ -304,7 +303,7 @@ export async function getMessagesByClientId(
   const { data, error } = await supabase
     .from("messages")
     .select(
-      "id, bot_reply_status, client_id, text, created_at, direction, read_at, read_by_manager_id, related_client_message_id, requires_manager_attention, sent_by_manager_id, sender_type, attention_level, clients!inner(telegram_chat_id, telegram_user_id, username, first_name, last_name)",
+      "id, bot_reply_status, client_id, text, created_at, direction, read_at, read_by_manager_id, related_client_message_id, requires_manager_attention, sent_by_manager_id, sender_type, attention_level, ai_confidence_score, clients!inner(telegram_chat_id, telegram_user_id, username, first_name, last_name)",
     )
     .eq("client_id", clientId)
     .order("created_at", { ascending: true });
@@ -344,6 +343,7 @@ export async function getMessagesByClientId(
       sent_by_manager_id: message.sent_by_manager_id,
       sender_type: message.sender_type,
       attention_level: message.attention_level,
+      ai_confidence_score: message.ai_confidence_score,
       sent_by_manager: message.sent_by_manager_id
         ? managerById.get(message.sent_by_manager_id) ?? null
         : null,
