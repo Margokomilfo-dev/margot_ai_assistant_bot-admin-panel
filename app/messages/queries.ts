@@ -4,12 +4,15 @@ import {
 } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
+import { getDisplayName } from "./lib/utils";
 import type { Tables } from "@/lib/supabase/database.types";
 import type {
   Client,
   ClientAssignment,
+  ClientFilters,
   ClientLastReply,
   ClientMessageStatus,
+  ClientSortKey,
   Manager,
   Message,
 } from "./types";
@@ -146,15 +149,159 @@ function getClientMessageStatus(
   return "low";
 }
 
+const priorityWeight: Record<Client["urgency_level"], number> = {
+  high: 3,
+  middle: 2,
+  low: 1,
+};
+
+function compareNullableDates(
+  firstDate: string | null,
+  secondDate: string | null,
+  ascending: boolean,
+) {
+  if (firstDate === secondDate) {
+    return 0;
+  }
+
+  if (!firstDate) {
+    return 1;
+  }
+
+  if (!secondDate) {
+    return -1;
+  }
+
+  const diff = new Date(firstDate).getTime() - new Date(secondDate).getTime();
+
+  return ascending ? diff : -diff;
+}
+
+function compareNullableText(
+  firstText: string,
+  secondText: string,
+  ascending: boolean,
+) {
+  if (!firstText && secondText) {
+    return 1;
+  }
+
+  if (firstText && !secondText) {
+    return -1;
+  }
+
+  const diff = firstText.localeCompare(secondText);
+
+  return ascending ? diff : -diff;
+}
+
+function getAssignedManagerName(client: Client) {
+  const manager = client.assignment?.current_manager;
+
+  return manager ? `${manager.name} ${manager.surname}`.toLowerCase() : "";
+}
+
+function sortClients(clients: Client[], sort: ClientSortKey) {
+  return [...clients].sort((firstClient, secondClient) => {
+    let result = 0;
+
+    switch (sort) {
+      case "last_message_asc":
+        result = compareNullableDates(
+          firstClient.last_message_at,
+          secondClient.last_message_at,
+          true,
+        );
+        break;
+      case "priority_desc":
+        result =
+          priorityWeight[secondClient.urgency_level] -
+          priorityWeight[firstClient.urgency_level];
+        break;
+      case "priority_asc":
+        result =
+          priorityWeight[firstClient.urgency_level] -
+          priorityWeight[secondClient.urgency_level];
+        break;
+      case "manager_asc":
+        result = compareNullableText(
+          getAssignedManagerName(firstClient),
+          getAssignedManagerName(secondClient),
+          true,
+        );
+        break;
+      case "manager_desc":
+        result = compareNullableText(
+          getAssignedManagerName(firstClient),
+          getAssignedManagerName(secondClient),
+          false,
+        );
+        break;
+      case "name_asc":
+        result = compareNullableText(
+          getDisplayName(firstClient).toLowerCase(),
+          getDisplayName(secondClient).toLowerCase(),
+          true,
+        );
+        break;
+      case "name_desc":
+        result = compareNullableText(
+          getDisplayName(firstClient).toLowerCase(),
+          getDisplayName(secondClient).toLowerCase(),
+          false,
+        );
+        break;
+      case "last_message_desc":
+      default:
+        result = compareNullableDates(
+          firstClient.last_message_at,
+          secondClient.last_message_at,
+          false,
+        );
+        break;
+    }
+
+    if (result !== 0) {
+      return result;
+    }
+
+    if (
+      firstClient.needs_manager_attention !==
+      secondClient.needs_manager_attention
+    ) {
+      return firstClient.needs_manager_attention ? -1 : 1;
+    }
+
+    return compareNullableDates(
+      firstClient.last_message_at,
+      secondClient.last_message_at,
+      false,
+    );
+  });
+}
+
 // Собираем список клиентов для sidebar: сортировка, назначения и счетчики unread.
-export async function getClients(managers: Manager[], currentManagerId: string) {
+export async function getClients(
+  managers: Manager[],
+  currentManagerId: string,
+  filters: ClientFilters,
+) {
   const supabase = createSupabaseAdminClient();
 
-  // Клиенты идут по последнему сообщению, чтобы свежие диалоги были сверху.
-  const { data: clients, error } = await supabase
+  let clientsQuery = supabase
     .from("clients")
     .select("*")
     .order("last_message_at", { ascending: false, nullsFirst: false });
+
+  if (filters.status !== "all") {
+    clientsQuery = clientsQuery.eq("dialog_status", filters.status);
+  }
+
+  if (filters.priority !== "all") {
+    clientsQuery = clientsQuery.eq("urgency_level", filters.priority);
+  }
+
+  const { data: clients, error } = await clientsQuery;
 
   if (error) {
     throw new Error(error.message);
@@ -235,7 +382,9 @@ export async function getClients(managers: Manager[], currentManagerId: string) 
     ]),
   );
 
-  return clients
+  const normalizedSearch = filters.search.trim().toLowerCase();
+
+  const enrichedClients = clients
     .map((client): Client => {
       const assignment = assignmentByClientId.get(client.id) ?? null;
       const lastReply = lastReplyByClientId.get(client.id) ?? null;
@@ -263,16 +412,32 @@ export async function getClients(managers: Manager[], currentManagerId: string) 
         last_reply: lastReply,
       };
     })
-    .sort((firstClient, secondClient) => {
+    .filter((client) => {
       if (
-        firstClient.needs_manager_attention !==
-        secondClient.needs_manager_attention
+        filters.managerId &&
+        client.assignment?.current_manager_id !== filters.managerId
       ) {
-        return firstClient.needs_manager_attention ? -1 : 1;
+        return false;
       }
 
-      return 0;
+      if (!normalizedSearch) {
+        return true;
+      }
+
+      const searchableClientName = [
+        getDisplayName(client),
+        client.first_name,
+        client.last_name,
+        client.username,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchableClientName.includes(normalizedSearch);
     });
+
+  return sortClients(enrichedClients, filters.sort);
 }
 
 // Список менеджеров нужен для формы назначения диалога.

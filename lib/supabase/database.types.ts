@@ -222,6 +222,7 @@ export type Database = {
           embedding: string | null
           id: string
           is_active: boolean
+          last_edited_by_manager_id: string | null
           metadata: Json
           title: string
           updated_at: string | null
@@ -233,6 +234,7 @@ export type Database = {
           embedding?: string | null
           id?: string
           is_active?: boolean
+          last_edited_by_manager_id?: string | null
           metadata?: Json
           title: string
           updated_at?: string | null
@@ -244,6 +246,7 @@ export type Database = {
           embedding?: string | null
           id?: string
           is_active?: boolean
+          last_edited_by_manager_id?: string | null
           metadata?: Json
           title?: string
           updated_at?: string | null
@@ -254,6 +257,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "knowledge_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_base_last_edited_by_manager_id_fkey"
+            columns: ["last_edited_by_manager_id"]
+            isOneToOne: false
+            referencedRelation: "managers"
             referencedColumns: ["id"]
           },
         ]

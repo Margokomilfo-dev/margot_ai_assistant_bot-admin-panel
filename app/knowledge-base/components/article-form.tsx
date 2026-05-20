@@ -2,7 +2,10 @@
 
 import type { FormEvent } from "react";
 
-import type { KnowledgeCategory } from "../knowledge-base-workspace";
+import type {
+  KnowledgeArticle,
+  KnowledgeCategory,
+} from "../knowledge-base-workspace";
 
 type KnowledgeArticleFormProps = {
   answer: string;
@@ -11,6 +14,7 @@ type KnowledgeArticleFormProps = {
   isDeleting: boolean;
   isSaving: boolean;
   question: string;
+  selectedArticle: KnowledgeArticle | null;
   selectedArticleId: string | null;
   selectedCategoryId: string;
   successMessage: string | null;
@@ -28,6 +32,7 @@ export function KnowledgeArticleForm({
   isDeleting,
   isSaving,
   question,
+  selectedArticle,
   selectedArticleId,
   selectedCategoryId,
   successMessage,
@@ -37,6 +42,19 @@ export function KnowledgeArticleForm({
   onQuestionChange,
   onSubmit,
 }: KnowledgeArticleFormProps) {
+  const editorName = selectedArticle?.last_edited_by_manager
+    ? `${selectedArticle.last_edited_by_manager.name} ${selectedArticle.last_edited_by_manager.surname}`
+    : null;
+  const updatedAt = selectedArticle?.updated_at
+    ? new Intl.DateTimeFormat("ru-RU", {
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }).format(new Date(selectedArticle.updated_at))
+    : null;
+
   return (
     <section className="min-w-0 px-4 py-4">
       <form action="#" onSubmit={onSubmit}>
@@ -48,6 +66,12 @@ export function KnowledgeArticleForm({
             <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950">
               Вопрос и ответ для будущего AI
             </h2>
+            {selectedArticleId ? (
+              <p className="mt-1 text-xs font-medium text-slate-500">
+                Последнее изменение: {editorName ?? "менеджер не указан"}
+                {updatedAt ? `, ${updatedAt}` : ""}
+              </p>
+            ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {selectedArticleId ? (

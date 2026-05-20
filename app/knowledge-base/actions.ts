@@ -7,6 +7,7 @@ import type {
   TablesInsert,
   TablesUpdate,
 } from "@/lib/supabase/database.types";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { invokeKnowledgeFunction } from "./lib/knowledge-api";
 import { getKnowledgeBaseContext } from "./lib/knowledge-context";
 import type { KnowledgeActionResult } from "./types";
@@ -51,6 +52,7 @@ export async function createKnowledgeArticleAction(input: {
     payload: {
       category_id: categoryId,
       content,
+      last_edited_by_manager_id: managerId,
       metadata: {
         created_by_manager_id: managerId,
         source: "admin-panel",
@@ -109,7 +111,7 @@ export async function updateKnowledgeArticleAction(input: {
     } satisfies KnowledgeActionResult;
   }
 
-  const { accessToken } = await getKnowledgeBaseContext();
+  const { accessToken, managerId } = await getKnowledgeBaseContext();
   const result = await invokeKnowledgeFunction({
     accessToken,
     endpoint: "knowledge-base",
@@ -118,11 +120,25 @@ export async function updateKnowledgeArticleAction(input: {
       category_id: categoryId,
       content,
       id,
+      last_edited_by_manager_id: managerId,
       title,
     },
   });
 
   if (result.ok) {
+    const admin = createSupabaseAdminClient();
+    const { error: editorError } = await admin
+      .from("knowledge_base")
+      .update({ last_edited_by_manager_id: managerId })
+      .eq("id", id);
+
+    if (editorError) {
+      return {
+        ok: false,
+        error: editorError.message,
+      } satisfies KnowledgeActionResult;
+    }
+
     revalidatePath("/knowledge-base");
   }
 

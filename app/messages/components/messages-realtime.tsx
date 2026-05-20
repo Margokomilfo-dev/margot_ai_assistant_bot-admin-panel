@@ -1,13 +1,131 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
+type MessagesRealtimeProps = {
+  unreadCount: number;
+};
+
+type RealtimeMessageRow = {
+  direction?: unknown;
+  sender_type?: unknown;
+};
+
+type AudioWindow = Window &
+  typeof globalThis & {
+    webkitAudioContext?: typeof AudioContext;
+  };
+
+function isIncomingClientMessage(record: unknown) {
+  if (!record || typeof record !== "object") {
+    return false;
+  }
+
+  const message = record as RealtimeMessageRow;
+
+  return message.direction === "incoming" || message.sender_type === "client";
+}
+
+function getBadgeNavigator() {
+  return navigator as Navigator & {
+    clearAppBadge?: () => Promise<void>;
+    setAppBadge?: (contents?: number) => Promise<void>;
+  };
+}
+
+function playNotificationTone(audioContextRef: React.MutableRefObject<AudioContext | null>) {
+  try {
+    const audioWindow = window as AudioWindow;
+    const AudioContextConstructor =
+      audioWindow.AudioContext || audioWindow.webkitAudioContext;
+
+    if (!AudioContextConstructor) {
+      return;
+    }
+
+    const audioContext =
+      audioContextRef.current ?? new AudioContextConstructor();
+    audioContextRef.current = audioContext;
+
+    if (audioContext.state === "suspended") {
+      void audioContext.resume();
+    }
+
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const now = audioContext.currentTime;
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, now);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.24);
+  } catch (error) {
+    console.warn("Unable to play notification sound.", error);
+  }
+}
+
 // Невидимый компонент держит Realtime-подписку и обновляет серверные данные страницы.
-export function MessagesRealtime() {
+export function MessagesRealtime({ unreadCount }: MessagesRealtimeProps) {
   const router = useRouter();
+  const [optimisticUnreadCount, setOptimisticUnreadCount] =
+    useState(unreadCount);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const baseTitleRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setOptimisticUnreadCount(unreadCount);
+  }, [unreadCount]);
+
+  useEffect(() => {
+    if (!baseTitleRef.current) {
+      baseTitleRef.current = document.title.replace(/^\(\d+\)\s+/, "");
+    }
+
+    const title = baseTitleRef.current;
+    document.title =
+      optimisticUnreadCount > 0
+        ? `(${optimisticUnreadCount}) ${title}`
+        : title;
+
+    const badgeNavigator = getBadgeNavigator();
+
+    if (optimisticUnreadCount > 0) {
+      void badgeNavigator.setAppBadge?.(optimisticUnreadCount);
+    } else {
+      void badgeNavigator.clearAppBadge?.();
+    }
+  }, [optimisticUnreadCount]);
+
+  useEffect(() => {
+    function unlockAudio() {
+      const audioWindow = window as AudioWindow;
+      const AudioContextConstructor =
+        audioWindow.AudioContext || audioWindow.webkitAudioContext;
+
+      if (!AudioContextConstructor || audioContextRef.current) {
+        return;
+      }
+
+      audioContextRef.current = new AudioContextConstructor();
+      void audioContextRef.current.resume();
+    }
+
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
+    window.addEventListener("keydown", unlockAudio, { once: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+    };
+  }, []);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -98,6 +216,14 @@ export function MessagesRealtime() {
           },
           (payload) => {
             console.log("Realtime payload:", payload);
+            if (
+              payload.eventType === "INSERT" &&
+              isIncomingClientMessage(payload.new)
+            ) {
+              setOptimisticUnreadCount((count) => count + 1);
+              playNotificationTone(audioContextRef);
+            }
+
             refreshMessagesPage();
           },
         )

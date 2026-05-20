@@ -5,10 +5,13 @@ import {
   getDisplayName,
   getInitials,
 } from "../lib/utils";
-import type { Client } from "../types";
+import { dialogStatusOptions, urgencyLevelOptions } from "../lib/client-options";
+import type { Client, ClientFilters, Manager } from "../types";
 
 type ClientsSidebarProps = {
   clients: Client[];
+  filters: ClientFilters;
+  managers: Manager[];
   selectedClientId?: string;
 };
 
@@ -66,14 +69,54 @@ function getDialogStatusMeta(client: Client) {
   }
 }
 
+function getClientHref(clientId: string, filters: ClientFilters) {
+  const query: Record<string, string> = {
+    client: clientId,
+  };
+
+  if (filters.status !== "all") {
+    query.status = filters.status;
+  }
+
+  if (filters.priority !== "all") {
+    query.priority = filters.priority;
+  }
+
+  if (filters.managerId) {
+    query.manager = filters.managerId;
+  }
+
+  if (filters.search) {
+    query.q = filters.search;
+  }
+
+  if (filters.sort !== "last_message_desc") {
+    query.sort = filters.sort;
+  }
+
+  return {
+    pathname: "/messages",
+    query,
+  };
+}
+
 // Левый список диалогов: показывает клиентов, unread и текущего назначенного менеджера.
 export function ClientsSidebar({
   clients,
+  filters,
+  managers,
   selectedClientId,
 }: ClientsSidebarProps) {
+  const hasActiveFilters =
+    filters.status !== "all" ||
+    filters.priority !== "all" ||
+    Boolean(filters.managerId) ||
+    Boolean(filters.search) ||
+    filters.sort !== "last_message_desc";
+
   return (
-    <aside className="border-r border-slate-200 bg-[#f7f8fa]">
-      <div className="border-b border-slate-200 px-3 py-2.5">
+    <aside className="flex min-h-0 flex-col border-r border-slate-200 bg-[#f7f8fa]">
+      <div className="shrink-0 border-b border-slate-200 px-3 py-2.5">
         <div className="flex items-center justify-between gap-2">
           <div>
             <h2 className="text-sm font-bold text-slate-950">Clients</h2>
@@ -82,9 +125,117 @@ export function ClientsSidebar({
             </p>
           </div>
           <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-500 shadow-sm ring-1 ring-slate-200">
-            All
+            {hasActiveFilters ? "Filtered" : "All"}
           </span>
         </div>
+        <details className="mt-3 group">
+          <summary className="flex h-8 cursor-pointer list-none items-center justify-between rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950 [&::-webkit-details-marker]:hidden">
+            <span>Filter settings</span>
+            <span className="text-[10px] text-slate-400 transition-transform group-open:rotate-180">
+              v
+            </span>
+          </summary>
+          <form action="/messages" className="mt-2 grid gap-2">
+            <label className="grid gap-1">
+              <span className="text-[10px] font-semibold uppercase text-slate-400">
+                Client name
+              </span>
+              <input
+                type="search"
+                name="q"
+                defaultValue={filters.search}
+                placeholder="Search client"
+                className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-950"
+              />
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="grid gap-1">
+                <span className="text-[10px] font-semibold uppercase text-slate-400">
+                  Status
+                </span>
+                <select
+                  name="status"
+                  defaultValue={filters.status}
+                  className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-800 outline-none focus:border-slate-950"
+                >
+                  <option value="all">All</option>
+                  {dialogStatusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-1">
+                <span className="text-[10px] font-semibold uppercase text-slate-400">
+                  Priority
+                </span>
+                <select
+                  name="priority"
+                  defaultValue={filters.priority}
+                  className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-800 outline-none focus:border-slate-950"
+                >
+                  <option value="all">All</option>
+                  {urgencyLevelOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label className="grid gap-1">
+              <span className="text-[10px] font-semibold uppercase text-slate-400">
+                Assigned manager
+              </span>
+              <select
+                name="manager"
+                defaultValue={filters.managerId}
+                className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-800 outline-none focus:border-slate-950"
+              >
+                <option value="">All managers</option>
+                {managers.map((manager) => (
+                  <option key={manager.id} value={manager.id}>
+                    {manager.name} {manager.surname}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-1">
+              <span className="text-[10px] font-semibold uppercase text-slate-400">
+                Sort
+              </span>
+              <select
+                name="sort"
+                defaultValue={filters.sort}
+                className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-800 outline-none focus:border-slate-950"
+              >
+                <option value="last_message_desc">Last message: newest</option>
+                <option value="last_message_asc">Last message: oldest</option>
+                <option value="priority_desc">Priority: high first</option>
+                <option value="priority_asc">Priority: low first</option>
+                <option value="manager_asc">Manager: A-Z</option>
+                <option value="manager_desc">Manager: Z-A</option>
+                <option value="name_asc">Client name: A-Z</option>
+                <option value="name_desc">Client name: Z-A</option>
+              </select>
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="h-8 flex-1 rounded-md bg-slate-950 px-2 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
+              >
+                Apply
+              </button>
+              <Link
+                href="/messages"
+                className="flex h-8 items-center rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-950"
+              >
+                Reset
+              </Link>
+            </div>
+          </form>
+        </details>
       </div>
 
       {clients.length === 0 ? (
@@ -92,7 +243,7 @@ export function ClientsSidebar({
           No clients found in Supabase.
         </div>
       ) : (
-        <nav className="max-h-[calc(100vh-8.5rem)] space-y-1 overflow-y-auto p-2">
+        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
           {clients.map((client) => {
             const isActive = client.id === selectedClientId;
             const clientMessageStatusMeta = getClientMessageStatusMeta(client);
@@ -141,7 +292,7 @@ export function ClientsSidebar({
                 {isActive ? (
                   <div aria-current="page">{rowContent}</div>
                 ) : (
-                  <Link href={`/messages?client=${client.id}`}>
+                  <Link href={getClientHref(client.id, filters)}>
                     {rowContent}
                   </Link>
                 )}

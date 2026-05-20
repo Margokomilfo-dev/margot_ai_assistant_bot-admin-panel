@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { markClientMessagesAsRead, sendManagerReplyAction } from "../actions";
+import {
+  markClientMessagesAsRead,
+  sendManagerReplyAction,
+} from "../actions";
 
 type ReplyComposerProps = {
   clientId: string;
@@ -87,6 +90,21 @@ export function ReplyComposer({
     });
   }
 
+  function handleTextareaKeyDown(
+    event: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) {
+    if (
+      event.key !== "Enter" ||
+      event.shiftKey ||
+      event.nativeEvent.isComposing
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  }
+
   return (
     <form
       action="#"
@@ -112,6 +130,7 @@ export function ReplyComposer({
           rows={2}
           value={draft}
           onChange={(event) => handleDraftChange(event.target.value)}
+          onKeyDown={handleTextareaKeyDown}
           placeholder={
             canReply
               ? "Write a reply to the client..."

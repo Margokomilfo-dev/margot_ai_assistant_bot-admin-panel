@@ -12,6 +12,23 @@ type KnowledgeArticleListProps = {
   onStartNewArticle: () => void;
 };
 
+function getArticleEditorLabel(article: KnowledgeArticle) {
+  const editorName = article.last_edited_by_manager
+    ? `${article.last_edited_by_manager.name} ${article.last_edited_by_manager.surname}`
+    : "менеджер не указан";
+  const updatedAt = article.updated_at
+    ? new Intl.DateTimeFormat("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }).format(new Date(article.updated_at))
+    : null;
+
+  return updatedAt
+    ? `Изменил ${editorName}, ${updatedAt}`
+    : `Изменил ${editorName}`;
+}
+
 export function KnowledgeArticleList({
   articles,
   filteredArticles,
@@ -74,6 +91,9 @@ export function KnowledgeArticleList({
               </h3>
               <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
                 {article.content}
+              </p>
+              <p className="mt-2 text-[11px] font-medium text-slate-400">
+                {getArticleEditorLabel(article)}
               </p>
             </button>
           ))

@@ -19,13 +19,15 @@ type ChatbotSettingsWorkspaceProps = {
 };
 
 const MANAGER_INTRO_REPLY_KEY = "manager_intro_reply";
+const DEFAULT_FALLBACK_REPLY =
+  "Не нашел точный ответ в базе знаний. Передаю вопрос менеджеру.";
 
 const emptyInstruction = {
   ai_consecutive_reply_limit: 3,
   ai_intro_reply: "",
   auto_finish_after_hours: 24,
   created_at: null,
-  fallback_reply: "",
+  fallback_reply: DEFAULT_FALLBACK_REPLY,
   handoff_reply: "",
   id: "",
   is_active: true,
@@ -311,22 +313,6 @@ export function ChatbotSettingsWorkspace({
                   }))
                 }
                 className="min-h-80 resize-none rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-slate-950"
-              />
-            </label>
-
-            <label className="grid gap-1.5">
-              <span className="text-xs font-semibold text-slate-500">
-                Fallback reply
-              </span>
-              <textarea
-                value={draft.fallback_reply}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    fallback_reply: event.target.value,
-                  }))
-                }
-                className="min-h-24 resize-none rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-6 outline-none focus:border-slate-950"
               />
             </label>
 

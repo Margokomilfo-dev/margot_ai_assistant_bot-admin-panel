@@ -24,7 +24,9 @@ export async function getKnowledgeArticles() {
 
   const { data, error } = await supabase
     .from("knowledge_base")
-    .select("id, title, content, category_id, knowledge_categories(name)")
+    .select(
+      "id, title, content, category_id, updated_at, last_edited_by_manager_id, knowledge_categories(name), last_edited_by_manager:managers!knowledge_base_last_edited_by_manager_id_fkey(id, name, surname, position)",
+    )
     // Показываем менеджеру только включенные материалы, которые можно использовать для AI.
     .eq("is_active", true)
     // Сначала выводим самые недавно обновленные или созданные карточки.

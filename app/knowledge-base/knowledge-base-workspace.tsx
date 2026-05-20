@@ -3,7 +3,6 @@
 import { KnowledgeArticleForm } from "./components/article-form";
 import { KnowledgeArticleList } from "./components/article-list";
 import { KnowledgeCategoriesPanel } from "./components/categories-panel";
-import { KnowledgeQualityPanel } from "./components/quality-panel";
 import { useKnowledgeBaseWorkspace } from "./hooks/use-knowledge-base-workspace";
 import type { getKnowledgeArticles, getKnowledgeCategories } from "./queries";
 
@@ -17,14 +16,12 @@ export type KnowledgeCategory = Awaited<
 type KnowledgeBaseWorkspaceProps = {
   articles: KnowledgeArticle[];
   categories: KnowledgeCategory[];
-  qualityChecks: string[];
 };
 
 // Координатор страницы базы знаний: собирает состояние из hook и раскладывает его по UI-компонентам.
 export function KnowledgeBaseWorkspace({
   articles,
   categories,
-  qualityChecks,
 }: KnowledgeBaseWorkspaceProps) {
   const { articleForm, articleList, categoryPanel } =
     useKnowledgeBaseWorkspace({
@@ -45,7 +42,6 @@ export function KnowledgeBaseWorkspace({
               categories={categories}
               {...categoryPanel}
             />
-            <KnowledgeQualityPanel qualityChecks={qualityChecks} />
           </aside>
         </div>
       </div>

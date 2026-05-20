@@ -3,14 +3,6 @@ import { getAuthorizedManager } from "../messages/queries";
 import { KnowledgeBaseWorkspace } from "./knowledge-base-workspace";
 import { getKnowledgeArticles, getKnowledgeCategories } from "./queries";
 
-// Чеклист показывает, какие требования будут важны для будущих AI-ответов.
-const qualityChecks = [
-  "Вопрос сформулирован так, как пишет клиент",
-  "Ответ короткий и без лишних деталей",
-  "Есть понятное действие для менеджера или AI",
-  "Информация готова к проверке перед публикацией",
-];
-
 export const dynamic = "force-dynamic";
 
 // Серверная страница защищает раздел и передает реальные материалы базы знаний.
@@ -35,7 +27,6 @@ export default async function KnowledgeBasePage() {
         <KnowledgeBaseWorkspace
           articles={articles}
           categories={categories}
-          qualityChecks={qualityChecks}
         />
       </div>
     </main>

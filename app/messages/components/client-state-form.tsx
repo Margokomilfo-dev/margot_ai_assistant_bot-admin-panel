@@ -1,51 +1,39 @@
 import { updateClientDialogStateAction } from "../actions";
-import type { Client } from "../types";
+import { ClientStateFormControls } from "./client-state-form-controls";
+import type { Client, Manager } from "../types";
 
 type ClientStateFormProps = {
+  managers: Manager[];
   selectedClient: Client;
 };
 
-const dialogStatusOptions = [
-  { value: "waiting", label: "Waiting" },
-  { value: "in_progress", label: "In progress" },
-  { value: "finished", label: "Finished" },
-] as const;
+export function ClientStateForm({
+  managers,
+  selectedClient,
+}: ClientStateFormProps) {
+  const assignedManagerId = selectedClient.assignment?.current_manager_id ?? "";
+  const selectedManagerId =
+    selectedClient.dialog_status === "finished" ? "" : assignedManagerId;
+  const formKey = [
+    selectedClient.id,
+    selectedClient.dialog_status,
+    selectedClient.urgency_level,
+    selectedManagerId,
+  ].join(":");
 
-const urgencyLevelOptions = [
-  { value: "high", label: "High" },
-  { value: "middle", label: "Middle" },
-  { value: "low", label: "Low" },
-] as const;
-
-export function ClientStateForm({ selectedClient }: ClientStateFormProps) {
   return (
     <form
+      key={formKey}
       action={updateClientDialogStateAction}
       className="flex flex-wrap items-center gap-1.5"
     >
       <input type="hidden" name="clientId" value={selectedClient.id} />
-      <select
-        name="dialogStatus"
-        defaultValue={selectedClient.dialog_status}
-        className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 outline-none focus:border-slate-950"
-      >
-        {dialogStatusOptions.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      <select
-        name="urgencyLevel"
-        defaultValue={selectedClient.urgency_level}
-        className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 outline-none focus:border-slate-950"
-      >
-        {urgencyLevelOptions.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <ClientStateFormControls
+        initialDialogStatus={selectedClient.dialog_status}
+        initialManagerId={selectedManagerId}
+        initialUrgencyLevel={selectedClient.urgency_level}
+        managers={managers}
+      />
       <button
         type="submit"
         className="h-8 rounded-md bg-slate-950 px-2.5 text-xs font-semibold text-white transition-colors hover:bg-slate-800"

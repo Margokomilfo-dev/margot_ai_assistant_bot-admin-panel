@@ -309,6 +309,7 @@ export function useKnowledgeBaseWorkspace({
       isDeleting: isDeletingArticle,
       isSaving,
       question,
+      selectedArticle,
       selectedArticleId,
       selectedCategoryId,
       successMessage,

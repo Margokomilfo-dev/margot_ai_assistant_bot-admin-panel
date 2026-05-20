@@ -105,6 +105,7 @@ export async function updateClientDialogStateAction(formData: FormData) {
   const clientId = String(formData.get("clientId") ?? "");
   const dialogStatus = String(formData.get("dialogStatus") ?? "");
   const urgencyLevel = String(formData.get("urgencyLevel") ?? "");
+  const requestedManagerId = String(formData.get("managerId") ?? "") || null;
 
   if (!clientId) {
     throw new Error("Missing client.");
@@ -121,7 +122,9 @@ export async function updateClientDialogStateAction(formData: FormData) {
   }
 
   const admin = createSupabaseAdminClient();
+  const { managerId: currentManagerId } = await getCurrentManagerContext();
   const now = new Date().toISOString();
+  const managerId = dialogStatus === "finished" ? null : requestedManagerId;
   const payload: TablesUpdate<"clients"> = {
     dialog_status: dialogStatus as TablesUpdate<"clients">["dialog_status"],
     urgency_level: urgencyLevel as TablesUpdate<"clients">["urgency_level"],
@@ -140,6 +143,22 @@ export async function updateClientDialogStateAction(formData: FormData) {
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  const { error: assignmentError } = await admin
+    .from("client_assignments")
+    .upsert(
+      {
+        client_id: clientId,
+        current_manager_id: managerId,
+        assigned_by_manager_id: currentManagerId,
+        updated_at: now,
+      },
+      { onConflict: "client_id" },
+    );
+
+  if (assignmentError) {
+    throw new Error(assignmentError.message);
   }
 
   revalidatePath("/messages");
